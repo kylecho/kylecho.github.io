@@ -47,110 +47,107 @@ import * as THREE from "./vendor/three.module.min.js";
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
   camera.position.set(0, 0, 5.4);
 
-  const graph = new THREE.Group();
-  scene.add(graph);
+  const field = new THREE.Group();
+  const BASE_TILT_X = -0.55;
+  field.rotation.x = BASE_TILT_X;
+  scene.add(field);
 
-  // Fibonacci sphere distribution — an even, organic node layout.
-  const NODE_COUNT = 30;
-  const RADIUS = 1.7;
-  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-  const jitter = () => (Math.random() - 0.5) * 0.12;
+  // A grid of vertices, deformed each frame into a flowing wireframe surface.
+  const SEGMENTS = 34;
+  const PLANE_SIZE = 3.6;
+  const VERTS_PER_SIDE = SEGMENTS + 1;
+  const step = PLANE_SIZE / SEGMENTS;
+  const half = PLANE_SIZE / 2;
 
-  const positions = [];
-  for (let i = 0; i < NODE_COUNT; i++) {
-    const y = 1 - (i / (NODE_COUNT - 1)) * 2;
-    const radiusAtY = Math.sqrt(Math.max(0, 1 - y * y));
-    const theta = goldenAngle * i;
-    const x = Math.cos(theta) * radiusAtY + jitter();
-    const z = Math.sin(theta) * radiusAtY + jitter();
-    positions.push(new THREE.Vector3(x, y + jitter(), z).multiplyScalar(RADIUS));
+  const vertexCount = VERTS_PER_SIDE * VERTS_PER_SIDE;
+  const gridPositions = new Float32Array(vertexCount * 3);
+  const gridColors = new Float32Array(vertexCount * 3);
+  const baseX = new Float32Array(vertexCount);
+  const baseY = new Float32Array(vertexCount);
+
+  let vi = 0;
+  for (let iy = 0; iy < VERTS_PER_SIDE; iy++) {
+    for (let ix = 0; ix < VERTS_PER_SIDE; ix++) {
+      const x = ix * step - half;
+      const y = iy * step - half;
+      baseX[vi] = x;
+      baseY[vi] = y;
+      gridPositions[vi * 3] = x;
+      gridPositions[vi * 3 + 1] = y;
+      gridPositions[vi * 3 + 2] = 0;
+      vi++;
+    }
   }
 
-  // Connect each node to its nearest neighbors to read as a system graph.
-  const NEIGHBORS = 2;
-  const edgeSet = new Set();
-  const edges = [];
-
-  positions.forEach((p, i) => {
-    const nearest = positions
-      .map((q, j) => ({ j, d: i === j ? Infinity : p.distanceTo(q) }))
-      .sort((a, b) => a.d - b.d)
-      .slice(0, NEIGHBORS);
-
-    nearest.forEach(({ j }) => {
-      const key = i < j ? `${i}-${j}` : `${j}-${i}`;
-      if (!edgeSet.has(key)) {
-        edgeSet.add(key);
-        edges.push(i, j);
+  const edgeIndices = [];
+  for (let iy = 0; iy < VERTS_PER_SIDE; iy++) {
+    for (let ix = 0; ix < VERTS_PER_SIDE; ix++) {
+      const i = iy * VERTS_PER_SIDE + ix;
+      if (ix < SEGMENTS) {
+        edgeIndices.push(i, i + 1);
       }
-    });
-  });
+      if (iy < SEGMENTS) {
+        edgeIndices.push(i, i + VERTS_PER_SIDE);
+      }
+    }
+  }
 
-  const linePositions = new Float32Array(edges.length * 3);
-  edges.forEach((idx, k) => {
-    const p = positions[idx];
-    linePositions[k * 3] = p.x;
-    linePositions[k * 3 + 1] = p.y;
-    linePositions[k * 3 + 2] = p.z;
-  });
+  const gridGeometry = new THREE.BufferGeometry();
+  const positionAttr = new THREE.BufferAttribute(gridPositions, 3);
+  const colorAttr = new THREE.BufferAttribute(gridColors, 3);
+  gridGeometry.setAttribute("position", positionAttr);
+  gridGeometry.setAttribute("color", colorAttr);
+  gridGeometry.setIndex(edgeIndices);
 
-  const lineGeometry = new THREE.BufferGeometry();
-  lineGeometry.setAttribute("position", new THREE.BufferAttribute(linePositions, 3));
-  const lineMaterial = new THREE.LineBasicMaterial({
-    color: 0x0a1f33,
-    transparent: true,
-    opacity: 0.18,
-  });
-  graph.add(new THREE.LineSegments(lineGeometry, lineMaterial));
-
-  // Node points, colored between the site's two blues.
-  const nodePositions = new Float32Array(NODE_COUNT * 3);
-  const nodeColors = new Float32Array(NODE_COUNT * 3);
-  const baseColorA = new THREE.Color(0x2251ff);
-  const baseColorB = new THREE.Color(0x042a77);
-
-  positions.forEach((p, i) => {
-    nodePositions[i * 3] = p.x;
-    nodePositions[i * 3 + 1] = p.y;
-    nodePositions[i * 3 + 2] = p.z;
-    const mix = baseColorA.clone().lerp(baseColorB, Math.random());
-    nodeColors[i * 3] = mix.r;
-    nodeColors[i * 3 + 1] = mix.g;
-    nodeColors[i * 3 + 2] = mix.b;
-  });
-  const baseColors = nodeColors.slice();
-
-  const nodeGeometry = new THREE.BufferGeometry();
-  nodeGeometry.setAttribute("position", new THREE.BufferAttribute(nodePositions, 3));
-  const colorAttr = new THREE.BufferAttribute(nodeColors, 3);
-  nodeGeometry.setAttribute("color", colorAttr);
-
-  const dotTexture = (() => {
-    const size = 64;
-    const dotCanvas = document.createElement("canvas");
-    dotCanvas.width = size;
-    dotCanvas.height = size;
-    const ctx = dotCanvas.getContext("2d");
-    const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-    gradient.addColorStop(0, "rgba(255,255,255,1)");
-    gradient.addColorStop(0.6, "rgba(255,255,255,0.55)");
-    gradient.addColorStop(1, "rgba(255,255,255,0)");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, size, size);
-    return new THREE.CanvasTexture(dotCanvas);
-  })();
-
-  const nodeMaterial = new THREE.PointsMaterial({
-    size: 0.14,
-    map: dotTexture,
+  const gridMaterial = new THREE.LineBasicMaterial({
     vertexColors: true,
     transparent: true,
-    depthWrite: false,
-    sizeAttenuation: true,
+    opacity: 0.6,
   });
 
-  const points = new THREE.Points(nodeGeometry, nodeMaterial);
-  graph.add(points);
+  field.add(new THREE.LineSegments(gridGeometry, gridMaterial));
+
+  // Invisible proxy plane, used only to translate pointer position into the
+  // field's local (x, y) space for the hover/click ripples.
+  const hitPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(PLANE_SIZE, PLANE_SIZE),
+    new THREE.MeshBasicMaterial({ visible: false })
+  );
+  field.add(hitPlane);
+
+  const colorLow = new THREE.Color(0x042a77);
+  const colorHigh = new THREE.Color(0x2251ff);
+  const tmpColor = new THREE.Color();
+
+  function waveHeight(x, y, t) {
+    return (
+      Math.sin(x * 0.9 + t * 0.5) * 0.1 +
+      Math.sin(y * 0.75 - t * 0.35) * 0.09 +
+      Math.sin((x + y) * 0.55 + t * 0.22) * 0.07 +
+      Math.sin((x - y) * 0.65 + t * 0.4) * 0.05
+    );
+  }
+
+  function hoverBump(x, y, px, py) {
+    const dx = x - px;
+    const dy = y - py;
+    const distSq = dx * dx + dy * dy;
+    return 0.35 * Math.exp(-distSq / (2 * 0.6 * 0.6));
+  }
+
+  function ripplePulse(x, y, pulse, now) {
+    const t = (now - pulse.start) / 1000;
+    if (t > 1.6) {
+      return 0;
+    }
+    const dx = x - pulse.x;
+    const dy = y - pulse.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const waveRadius = t * 2.2;
+    const ring = Math.exp(-((dist - waveRadius) ** 2) / (2 * 0.18 * 0.18));
+    const decay = Math.max(0, 1 - t / 1.6);
+    return ring * decay * 0.5;
+  }
 
   function resize() {
     const rect = container.getBoundingClientRect();
@@ -165,12 +162,23 @@ import * as THREE from "./vendor/three.module.min.js";
   resizeObserver.observe(container);
   resize();
 
-  // Interaction: hover parallax, drag-to-spin, tap-to-pulse a node.
+  // Interaction: hover ripple, drag-to-tilt, click-to-ripple.
   let isDragging = false;
   let pointerInside = false;
   const previousPointer = { x: 0, y: 0 };
-  let pointerTargetY = 0;
-  let pointerCurrentY = 0;
+  let manualRotationY = 0;
+  let pointerLocal = null;
+
+  const raycaster = new THREE.Raycaster();
+
+  function updatePointerLocal(event) {
+    const rect = container.getBoundingClientRect();
+    const nx = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    const ny = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
+    raycaster.setFromCamera(new THREE.Vector2(nx, ny), camera);
+    const hits = raycaster.intersectObject(hitPlane);
+    pointerLocal = hits.length ? hitPlane.worldToLocal(hits[0].point.clone()) : null;
+  }
 
   container.addEventListener("pointerenter", () => {
     pointerInside = true;
@@ -178,18 +186,17 @@ import * as THREE from "./vendor/three.module.min.js";
 
   container.addEventListener("pointerleave", () => {
     pointerInside = false;
-    pointerTargetY = 0;
+    pointerLocal = null;
   });
 
   container.addEventListener("pointermove", (event) => {
-    const rect = container.getBoundingClientRect();
-    pointerTargetY = ((event.clientY - rect.top) / rect.height) * 2 - 1;
+    updatePointerLocal(event);
 
     if (isDragging) {
       const dx = event.clientX - previousPointer.x;
       const dy = event.clientY - previousPointer.y;
-      graph.rotation.y += dx * 0.005;
-      graph.rotation.x = Math.max(-1, Math.min(1, graph.rotation.x + dy * 0.005));
+      manualRotationY = Math.max(-0.6, Math.min(0.6, manualRotationY + dx * 0.005));
+      field.rotation.x = Math.max(-0.9, Math.min(-0.3, field.rotation.x + dy * 0.005));
       previousPointer.x = event.clientX;
       previousPointer.y = event.clientY;
     }
@@ -215,18 +222,12 @@ import * as THREE from "./vendor/three.module.min.js";
   container.addEventListener("pointerup", endDrag);
   container.addEventListener("pointercancel", endDrag);
 
-  const raycaster = new THREE.Raycaster();
-  raycaster.params.Points.threshold = 0.12;
-  const pulses = new Map();
+  const pulses = [];
 
   container.addEventListener("click", (event) => {
-    const rect = container.getBoundingClientRect();
-    const nx = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    const ny = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
-    raycaster.setFromCamera(new THREE.Vector2(nx, ny), camera);
-    const hits = raycaster.intersectObject(points);
-    if (hits.length) {
-      pulses.set(hits[0].index, performance.now());
+    updatePointerLocal(event);
+    if (pointerLocal) {
+      pulses.push({ x: pointerLocal.x, y: pointerLocal.y, start: performance.now() });
     }
   });
 
@@ -239,9 +240,8 @@ import * as THREE from "./vendor/three.module.min.js";
   );
   io.observe(container);
 
-  const highlight = new THREE.Color(0xffffff);
-  const tmpColor = new THREE.Color();
   let lastTime = performance.now();
+  let elapsed = 0;
 
   function animate(now) {
     requestAnimationFrame(animate);
@@ -252,29 +252,42 @@ import * as THREE from "./vendor/three.module.min.js";
       return;
     }
 
-    if (!isDragging) {
-      graph.rotation.y += dt * 0.08;
+    elapsed += dt;
+
+    const sway = isDragging ? 0 : Math.sin(elapsed * 0.15) * 0.12;
+    field.rotation.y = manualRotationY + sway;
+
+    for (let i = 0; i < pulses.length; i++) {
+      if (now - pulses[i].start > 1600) {
+        pulses.splice(i, 1);
+        i--;
+      }
     }
 
-    pointerCurrentY += (pointerTargetY - pointerCurrentY) * 0.04;
+    for (let i = 0; i < vertexCount; i++) {
+      const x = baseX[i];
+      const y = baseY[i];
+      let h = waveHeight(x, y, elapsed);
 
-    if (!isDragging && pointerInside) {
-      graph.rotation.x += (-pointerCurrentY * 0.35 - graph.rotation.x) * 0.04;
+      if (pointerInside && !isDragging && pointerLocal) {
+        h += hoverBump(x, y, pointerLocal.x, pointerLocal.y);
+      }
+
+      for (let p = 0; p < pulses.length; p++) {
+        h += ripplePulse(x, y, pulses[p], now);
+      }
+
+      gridPositions[i * 3 + 2] = h;
+
+      const t = Math.max(0, Math.min(1, (h + 0.15) / 0.65));
+      tmpColor.copy(colorLow).lerp(colorHigh, t);
+      gridColors[i * 3] = tmpColor.r;
+      gridColors[i * 3 + 1] = tmpColor.g;
+      gridColors[i * 3 + 2] = tmpColor.b;
     }
 
-    if (pulses.size) {
-      pulses.forEach((start, index) => {
-        const t = (now - start) / 900;
-        if (t >= 1) {
-          pulses.delete(index);
-          colorAttr.setXYZ(index, baseColors[index * 3], baseColors[index * 3 + 1], baseColors[index * 3 + 2]);
-        } else {
-          tmpColor.copy(highlight).lerp(baseColorA, t);
-          colorAttr.setXYZ(index, tmpColor.r, tmpColor.g, tmpColor.b);
-        }
-      });
-      colorAttr.needsUpdate = true;
-    }
+    positionAttr.needsUpdate = true;
+    colorAttr.needsUpdate = true;
 
     renderer.render(scene, camera);
   }
