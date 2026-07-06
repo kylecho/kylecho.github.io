@@ -136,6 +136,7 @@ h3 {
 
 .hero {
   position: relative;
+  z-index: 0;
   display: flex;
   width: min(100%, var(--max-width));
   min-height: max(760px, 100svh);
@@ -145,13 +146,18 @@ h3 {
   overflow: hidden;
 }
 
-.hero::before {
+.hero::before,
+.hero::after,
+.hero-scene {
   position: absolute;
   z-index: -1;
   top: 3rem;
   right: -12vw;
   width: min(58vw, 850px);
   aspect-ratio: 1;
+}
+
+.hero::before {
   border: 1px solid var(--line);
   border-radius: 50%;
   background:
@@ -163,16 +169,44 @@ h3 {
 }
 
 .hero::after {
-  position: absolute;
-  z-index: -1;
-  top: 3rem;
-  right: -12vw;
-  width: min(58vw, 850px);
-  aspect-ratio: 1;
   border: 1px solid var(--line);
   border-radius: 50%;
   content: "";
   transform: scale(0.67);
+}
+
+.hero-scene {
+  display: none;
+  touch-action: none;
+  cursor: grab;
+}
+
+.hero-scene.is-dragging {
+  cursor: grabbing;
+}
+
+.hero-scene canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+html.has-3d-scene .hero-scene {
+  display: block;
+}
+
+html.has-3d-scene .hero::before,
+html.has-3d-scene .hero::after {
+  display: none;
+}
+
+html.has-3d-scene .hero > * {
+  pointer-events: none;
+}
+
+html.has-3d-scene .hero-scene,
+html.has-3d-scene .hero-actions {
+  pointer-events: auto;
 }
 
 .hero-kicker,
@@ -632,7 +666,8 @@ h3 {
   }
 
   .hero::before,
-  .hero::after {
+  .hero::after,
+  .hero-scene {
     right: -30vw;
     width: 85vw;
   }
@@ -828,6 +863,31 @@ h3 {
   .site-footer span:nth-child(2) {
     display: none;
   }
+}
+
+.copy-toast {
+  position: fixed;
+  z-index: 200;
+  bottom: 1.5rem;
+  left: 50%;
+  padding: 0.85rem 1.25rem;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--white);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 0.5rem);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.copy-toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 @media (prefers-reduced-motion: reduce) {
