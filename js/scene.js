@@ -97,7 +97,7 @@ import * as THREE from "./vendor/three.module.min.js";
   const lineGeometry = new THREE.BufferGeometry();
   lineGeometry.setAttribute("position", new THREE.BufferAttribute(linePositions, 3));
   const lineMaterial = new THREE.LineBasicMaterial({
-    color: 0x171715,
+    color: 0x0a1f33,
     transparent: true,
     opacity: 0.18,
   });
@@ -106,8 +106,8 @@ import * as THREE from "./vendor/three.module.min.js";
   // Node points, colored between the site's two blues.
   const nodePositions = new Float32Array(NODE_COUNT * 3);
   const nodeColors = new Float32Array(NODE_COUNT * 3);
-  const baseColorA = new THREE.Color(0x3155f5);
-  const baseColorB = new THREE.Color(0x203ac2);
+  const baseColorA = new THREE.Color(0x0f6cbd);
+  const baseColorB = new THREE.Color(0x0b4f8a);
 
   positions.forEach((p, i) => {
     nodePositions[i * 3] = p.x;
@@ -239,7 +239,7 @@ import * as THREE from "./vendor/three.module.min.js";
   );
   io.observe(container);
 
-  const highlight = new THREE.Color(0xfffdf7);
+  const highlight = new THREE.Color(0xffffff);
   const tmpColor = new THREE.Color();
   let lastTime = performance.now();
 

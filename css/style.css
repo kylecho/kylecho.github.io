@@ -1,12 +1,12 @@
 :root {
-  --paper: #f3f0e8;
-  --paper-deep: #e8e4d9;
-  --ink: #171715;
-  --muted: #66645f;
-  --blue: #3155f5;
-  --blue-dark: #203ac2;
-  --line: rgba(23, 23, 21, 0.2);
-  --white: #fffdf7;
+  --paper: #fafbfc;
+  --paper-deep: #eef1f4;
+  --ink: #0a1f33;
+  --muted: #5b6b7c;
+  --blue: #0f6cbd;
+  --blue-dark: #0b4f8a;
+  --line: rgba(10, 31, 51, 0.2);
+  --white: #ffffff;
   --page-pad: clamp(1.25rem, 4vw, 4.5rem);
   --section-pad: clamp(5rem, 10vw, 10rem);
   --max-width: 1600px;
@@ -39,7 +39,7 @@ body::before {
   position: fixed;
   z-index: 20;
   inset: 0;
-  border: 1px solid rgba(23, 23, 21, 0.08);
+  border: 1px solid rgba(10, 31, 51, 0.08);
   pointer-events: none;
   content: "";
 }
@@ -225,7 +225,7 @@ html.has-3d-scene .hero-actions {
   height: 0.55rem;
   border-radius: 50%;
   background: var(--blue);
-  box-shadow: 0 0 0 5px rgba(49, 85, 245, 0.12);
+  box-shadow: 0 0 0 5px rgba(15, 108, 189, 0.12);
 }
 
 .hero h1 {
@@ -479,7 +479,7 @@ html.has-3d-scene .hero-actions {
 }
 
 .section-heading-light .eyebrow {
-  color: rgba(255, 253, 247, 0.6);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .principles-grid {
@@ -507,7 +507,7 @@ html.has-3d-scene .hero-actions {
 }
 
 .principles-grid span {
-  color: rgba(255, 253, 247, 0.55);
+  color: rgba(255, 255, 255, 0.55);
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
   font-size: 0.63rem;
   letter-spacing: 0.08em;
@@ -527,7 +527,7 @@ html.has-3d-scene .hero-actions {
 .principles-grid p {
   max-width: 390px;
   margin-top: 2rem;
-  color: rgba(255, 253, 247, 0.62);
+  color: rgba(255, 255, 255, 0.62);
   font-size: 0.92rem;
   line-height: 1.65;
 }
@@ -621,17 +621,13 @@ html.has-3d-scene .hero-actions {
 .site-footer {
   display: grid;
   padding: 1.5rem var(--page-pad);
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr auto;
   background: var(--blue);
   color: rgba(255, 255, 255, 0.65);
   font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-}
-
-.site-footer span:nth-child(2) {
-  text-align: center;
 }
 
 .site-footer a {
@@ -856,13 +852,6 @@ html.has-3d-scene .hero-actions {
     flex-direction: column;
   }
 
-  .site-footer {
-    grid-template-columns: 1fr auto;
-  }
-
-  .site-footer span:nth-child(2) {
-    display: none;
-  }
 }
 
 .copy-toast {
