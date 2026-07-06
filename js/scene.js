@@ -106,8 +106,8 @@ import * as THREE from "./vendor/three.module.min.js";
   // Node points, colored between the site's two blues.
   const nodePositions = new Float32Array(NODE_COUNT * 3);
   const nodeColors = new Float32Array(NODE_COUNT * 3);
-  const baseColorA = new THREE.Color(0x0f6cbd);
-  const baseColorB = new THREE.Color(0x0b4f8a);
+  const baseColorA = new THREE.Color(0x2251ff);
+  const baseColorB = new THREE.Color(0x042a77);
 
   positions.forEach((p, i) => {
     nodePositions[i * 3] = p.x;

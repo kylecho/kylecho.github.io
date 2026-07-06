@@ -3,8 +3,9 @@
   --paper-deep: #eef1f4;
   --ink: #0a1f33;
   --muted: #5b6b7c;
-  --blue: #0f6cbd;
-  --blue-dark: #0b4f8a;
+  --blue: #2251ff;
+  --blue-dark: #042a77;
+  --blue-gradient: radial-gradient(circle farthest-corner at 25% 20%, var(--blue) 14%, var(--blue-dark) 50%, var(--blue-dark) 100%);
   --line: rgba(10, 31, 51, 0.2);
   --white: #ffffff;
   --page-pad: clamp(1.25rem, 4vw, 4.5rem);
@@ -225,7 +226,7 @@ html.has-3d-scene .hero-actions {
   height: 0.55rem;
   border-radius: 50%;
   background: var(--blue);
-  box-shadow: 0 0 0 5px rgba(15, 108, 189, 0.12);
+  box-shadow: 0 0 0 5px rgba(34, 81, 255, 0.12);
 }
 
 .hero h1 {
@@ -324,7 +325,7 @@ html.has-3d-scene .hero-actions {
   display: grid;
   padding: 2.5rem var(--page-pad);
   grid-template-columns: repeat(4, 1fr);
-  background: var(--blue);
+  background: var(--blue-gradient);
   color: var(--white);
 }
 
@@ -576,7 +577,7 @@ html.has-3d-scene .hero-actions {
 
 .contact-section {
   padding: var(--section-pad) var(--page-pad) 3rem;
-  background: var(--blue);
+  background: var(--blue-gradient);
   color: var(--white);
 }
 
@@ -622,7 +623,7 @@ html.has-3d-scene .hero-actions {
   display: grid;
   padding: 1.5rem var(--page-pad);
   grid-template-columns: 1fr auto;
-  background: var(--blue);
+  background: var(--blue-gradient);
   color: rgba(255, 255, 255, 0.65);
   font-size: 0.62rem;
   font-weight: 600;
