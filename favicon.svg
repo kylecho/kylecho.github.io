@@ -1,4 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#3155f5"/>
-  <path d="M18 14v36h8V35l17 15h11L33 31l19-17H41L26 28V14z" fill="#fffdf7"/>
+  <defs><clipPath id="r"><rect width="64" height="64" rx="14"/></clipPath></defs>
+  <rect width="64" height="64" rx="14" fill="#061225"/>
+  <g clip-path="url(#r)" fill="none" stroke-linecap="round">
+    <path d="M-4 22 Q 12 16 28 22 T 68 22" stroke="#26479e" stroke-width="3.2"/>
+    <path d="M-6 36 Q 10 28 26 36 T 70 36" stroke="#2251ff" stroke-width="3.6"/>
+    <path d="M-4 51 Q 14 41 30 51 T 68 51" stroke="#6c86ff" stroke-width="4"/>
+  </g>
 </svg>
