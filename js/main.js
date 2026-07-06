@@ -118,6 +118,13 @@
     update();
   }
 
+  // ---- dynamic year strings (hero index, footer copyright) ---------------
+  const now = new Date();
+  const yearFull = document.querySelector("[data-year-full]");
+  if (yearFull) yearFull.textContent = now.getFullYear();
+  const yearShort = document.querySelector("[data-year-short]");
+  if (yearShort) yearShort.textContent = String(now.getFullYear()).slice(-2);
+
   // ---- live San Francisco clock in the hero index ------------------------
   const clock = document.querySelector("[data-clock]");
   if (clock) {
