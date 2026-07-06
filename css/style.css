@@ -623,17 +623,18 @@ html.has-3d-scene .hero-actions {
   display: grid;
   padding: 1.5rem var(--page-pad);
   grid-template-columns: 1fr auto;
-  background: var(--blue);
-  color: rgba(255, 255, 255, 0.65);
+  background: var(--white);
+  color: var(--muted);
   font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 0.07em;
   text-transform: uppercase;
+  border-top: 1px solid var(--line);
 }
 
 .site-footer a {
   justify-self: end;
-  color: var(--white);
+  color: var(--ink);
 }
 
 .reveal-ready [data-reveal] {
