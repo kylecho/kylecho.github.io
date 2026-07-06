@@ -102,6 +102,7 @@
     let ticking = false;
     const update = () => {
       ticking = false;
+      document.body.classList.toggle("scrolled", window.scrollY > 24);
       document.body.classList.toggle("past-hero", window.scrollY > hero.offsetHeight - 76);
     };
     window.addEventListener(
@@ -175,6 +176,30 @@
       requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);
+  }
+
+  // ---- marquee leans with scroll velocity ---------------------------------
+  const marquee = document.querySelector(".marquee");
+  if (!reduced && marquee) {
+    let lastY = window.scrollY;
+    let target = 0;
+    let current = 0;
+    window.addEventListener(
+      "scroll",
+      () => {
+        const y = window.scrollY;
+        target = Math.max(-5, Math.min(5, (y - lastY) * 0.15));
+        lastY = y;
+      },
+      { passive: true }
+    );
+    const lean = () => {
+      target *= 0.9;
+      current += (target - current) * 0.12;
+      marquee.style.setProperty("--marquee-skew", current.toFixed(3) + "deg");
+      requestAnimationFrame(lean);
+    };
+    requestAnimationFrame(lean);
   }
 
   // ---- magnetic buttons ---------------------------------------------------
