@@ -138,6 +138,68 @@
 })();
 
 (() => {
+  const root = document.documentElement;
+  const toggle = document.querySelector(".theme-toggle");
+  if (!toggle) {
+    return;
+  }
+
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+
+  const syncUI = () => {
+    const theme = root.dataset.theme || "dark";
+    toggle.setAttribute("aria-label", theme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+    if (themeMeta) {
+      themeMeta.content = getComputedStyle(root).getPropertyValue("--bg").trim();
+    }
+  };
+  syncUI();
+
+  toggle.addEventListener("click", () => {
+    const next = (root.dataset.theme || "dark") === "dark" ? "light" : "dark";
+
+    const apply = () => {
+      root.dataset.theme = next;
+      try {
+        localStorage.setItem("theme", next);
+      } catch (e) {}
+      syncUI();
+      window.dispatchEvent(new CustomEvent("themechange", { detail: { theme: next } }));
+    };
+
+    // Circular wipe radiating from the toggle; plain swap without support
+    if (!reduced && document.startViewTransition) {
+      const rect = toggle.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      const radius = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y)
+      );
+
+      document.startViewTransition(apply).ready.then(() => {
+        root.animate(
+          {
+            clipPath: [
+              `circle(0px at ${x}px ${y}px)`,
+              `circle(${radius}px at ${x}px ${y}px)`,
+            ],
+          },
+          {
+            duration: 700,
+            easing: "cubic-bezier(0.4, 0, 0.2, 1)",
+            pseudoElement: "::view-transition-new(root)",
+          }
+        );
+      });
+    } else {
+      apply();
+    }
+  });
+})();
+
+(() => {
   const mailLinks = document.querySelectorAll('a[href^="mailto:"]');
 
   if (!mailLinks.length || !navigator.clipboard || !navigator.clipboard.writeText) {

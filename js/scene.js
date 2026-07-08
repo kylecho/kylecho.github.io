@@ -27,7 +27,20 @@ import * as THREE from "./vendor/three.module.min.js";
     return;
   }
 
-  const BG = 0x061225;
+  function cssColor(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  // Mesh palette lives in CSS custom properties so themes stay in one place
+  function readTheme() {
+    return {
+      light: document.documentElement.dataset.theme === "light",
+      bg: new THREE.Color(cssColor("--bg")),
+      low: new THREE.Color(cssColor("--mesh-low")),
+      high: new THREE.Color(cssColor("--mesh-high")),
+      dot: new THREE.Color(cssColor("--mesh-dot")),
+    };
+  }
 
   function makeDotTexture() {
     const size = 64;
@@ -45,10 +58,10 @@ import * as THREE from "./vendor/three.module.min.js";
   }
 
   function mountTerrain(container) {
-    const host = container.closest("section") || container.parentElement;
-    // The contact instance runs calmer so the closing copy stays the focus.
-    const calm = container.classList.contains("contact-scene");
-    const AMP = calm ? 0.7 : 1;
+    const host = container.closest("main, section") || container.parentElement;
+
+    let theme = readTheme();
+    const bgColor = theme.bg.clone();
 
     const canvas = document.createElement("canvas");
     container.appendChild(canvas);
@@ -61,14 +74,14 @@ import * as THREE from "./vendor/three.module.min.js";
       return false;
     }
 
-    renderer.setClearColor(BG, 1);
+    renderer.setClearColor(bgColor, 1);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(BG, 4.5, 11.5);
+    scene.fog = new THREE.Fog(bgColor.clone(), 4.5, 11.5);
 
     const camera = new THREE.PerspectiveCamera(58, 1, 0.1, 40);
-    const CAM_BASE = calm ? { x: 0, y: 1.9, z: 5.2 } : { x: 0, y: 1.6, z: 4.9 };
+    const CAM_BASE = { x: 0, y: 1.6, z: 4.9 };
     const LOOK_AT = new THREE.Vector3(0, 0.2, -1.6);
     camera.position.set(CAM_BASE.x, CAM_BASE.y, CAM_BASE.z);
     camera.lookAt(LOOK_AT);
@@ -123,7 +136,7 @@ import * as THREE from "./vendor/three.module.min.js";
     const gridMaterial = new THREE.LineBasicMaterial({
       vertexColors: true,
       transparent: true,
-      opacity: calm ? 0.55 : 0.75,
+      opacity: theme.light ? 0.95 : 0.75,
     });
 
     scene.add(new THREE.LineSegments(gridGeometry, gridMaterial));
@@ -149,12 +162,23 @@ import * as THREE from "./vendor/three.module.min.js";
     const pointMaterial = new THREE.PointsMaterial({
       size: 0.09,
       map: makeDotTexture(),
-      color: 0x7c9bff,
+      color: theme.dot.clone(),
       transparent: true,
-      opacity: calm ? 0.6 : 0.9,
+      opacity: theme.light ? 0.75 : 0.9,
       depthWrite: false,
-      blending: THREE.AdditiveBlending,
       sizeAttenuation: true,
+    });
+
+    // Additive glow washes out on a light background; blend normally there
+    const applyBlending = () => {
+      pointMaterial.blending = theme.light ? THREE.NormalBlending : THREE.AdditiveBlending;
+      pointMaterial.needsUpdate = true;
+    };
+    applyBlending();
+
+    window.addEventListener("themechange", () => {
+      theme = readTheme();
+      applyBlending();
     });
 
     scene.add(new THREE.Points(pointGeometry, pointMaterial));
@@ -165,8 +189,8 @@ import * as THREE from "./vendor/three.module.min.js";
     );
     scene.add(hitPlane);
 
-    const colorLow = new THREE.Color(0x16336e);
-    const colorHigh = new THREE.Color(0x5c86ff);
+    const colorLow = theme.low.clone();
+    const colorHigh = theme.high.clone();
     const tmpColor = new THREE.Color();
 
     function waveHeight(x, z, t) {
@@ -274,6 +298,17 @@ import * as THREE from "./vendor/three.module.min.js";
 
       elapsed += dt;
 
+      // Ease scene colors toward the active theme
+      const themeK = 1 - Math.exp(-dt * 4);
+      bgColor.lerp(theme.bg, themeK);
+      colorLow.lerp(theme.low, themeK);
+      colorHigh.lerp(theme.high, themeK);
+      pointMaterial.color.lerp(theme.dot, themeK);
+      gridMaterial.opacity += ((theme.light ? 0.95 : 0.75) - gridMaterial.opacity) * themeK;
+      pointMaterial.opacity += ((theme.light ? 0.75 : 0.9) - pointMaterial.opacity) * themeK;
+      scene.fog.color.copy(bgColor);
+      renderer.setClearColor(bgColor, 1);
+
       parallax.x += (parallax.tx - parallax.x) * 0.04;
       parallax.y += (parallax.ty - parallax.y) * 0.04;
       camera.position.x = CAM_BASE.x + Math.sin(elapsed * 0.1) * 0.3 + parallax.x * 0.5;
@@ -292,7 +327,7 @@ import * as THREE from "./vendor/three.module.min.js";
       for (let i = 0; i < vertexCount; i++) {
         const x = baseX[i];
         const z = baseZ[i];
-        let h = waveHeight(x, z, elapsed) * AMP;
+        let h = waveHeight(x, z, elapsed);
 
         if (pointer.strength > 0.01) {
           h += hoverBump(x, z, pointer.x, pointer.z) * pointer.strength;
