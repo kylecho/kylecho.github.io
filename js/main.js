@@ -144,7 +144,6 @@
     return;
   }
 
-  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const themeMeta = document.querySelector('meta[name="theme-color"]');
 
   const syncUI = () => {
@@ -156,78 +155,16 @@
   };
   syncUI();
 
-  // Reads a theme's --bg without switching to it: attribute selectors
-  // match the probe element directly
-  const themeBg = (theme) => {
-    const probe = document.createElement("div");
-    probe.dataset.theme = theme;
-    probe.style.display = "none";
-    document.body.appendChild(probe);
-    const bg = getComputedStyle(probe).getPropertyValue("--bg").trim();
-    probe.remove();
-    return bg;
-  };
-
-  let splashing = false;
-
+  // Instant swap: the sun/moon morph and the terrain's color melt
+  // (scene.js) carry the moment — no full-screen transition layers.
   toggle.addEventListener("click", () => {
     const next = (root.dataset.theme || "dark") === "dark" ? "light" : "dark";
-
-    const apply = () => {
-      root.dataset.theme = next;
-      try {
-        localStorage.setItem("theme", next);
-      } catch (e) {}
-      syncUI();
-      window.dispatchEvent(new CustomEvent("themechange", { detail: { theme: next } }));
-    };
-
-    if (reduced || splashing) {
-      apply();
-      return;
-    }
-
-    // A disc of the next theme's color washes out from the toggle, the
-    // theme swaps under full cover, then the page develops back in.
-    // One solid-color layer: no page snapshots, cheap at any screen size.
-    splashing = true;
-    const rect = toggle.getBoundingClientRect();
-    const x = rect.left + rect.width / 2;
-    const y = rect.top + rect.height / 2;
-    const radius = Math.hypot(
-      Math.max(x, window.innerWidth - x),
-      Math.max(y, window.innerHeight - y)
-    );
-
-    const splash = document.createElement("div");
-    splash.className = "theme-splash";
-    splash.style.background = themeBg(next);
-    splash.style.clipPath = `circle(0px at ${x}px ${y}px)`;
-    document.body.appendChild(splash);
-
-    const grow = splash.animate(
-      {
-        clipPath: [
-          `circle(0px at ${x}px ${y}px)`,
-          `circle(${radius}px at ${x}px ${y}px)`,
-        ],
-      },
-      { duration: 450, easing: "cubic-bezier(0.3, 0, 0.2, 1)", fill: "forwards" }
-    );
-
-    grow.finished
-      .then(() => {
-        apply();
-        return splash.animate(
-          { opacity: [1, 0] },
-          { duration: 350, easing: "ease", delay: 60, fill: "forwards" }
-        ).finished;
-      })
-      .catch(apply)
-      .finally(() => {
-        splash.remove();
-        splashing = false;
-      });
+    root.dataset.theme = next;
+    try {
+      localStorage.setItem("theme", next);
+    } catch (e) {}
+    syncUI();
+    window.dispatchEvent(new CustomEvent("themechange", { detail: { theme: next } }));
   });
 })();
 

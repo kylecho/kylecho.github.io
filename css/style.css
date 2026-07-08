@@ -56,15 +56,6 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Theme-toggle wave: a disc of the next theme's color, clipped and
-   grown from the toggle by main.js. Sits under the custom cursor. */
-.theme-splash {
-  position: fixed;
-  z-index: 9998;
-  inset: 0;
-  pointer-events: none;
-}
-
 /* Film grain — one static tile, kept subtle */
 body::after {
   position: fixed;
