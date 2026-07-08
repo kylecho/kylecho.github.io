@@ -178,21 +178,36 @@
         Math.max(y, window.innerHeight - y)
       );
 
-      document.startViewTransition(apply).ready.then(() => {
-        root.animate(
-          {
-            clipPath: [
-              `circle(0px at ${x}px ${y}px)`,
-              `circle(${radius}px at ${x}px ${y}px)`,
-            ],
-          },
-          {
-            duration: 700,
-            easing: "cubic-bezier(0.4, 0, 0.2, 1)",
-            pseudoElement: "::view-transition-new(root)",
-          }
-        );
-      });
+      // Snapshots past ~10MP (5K fullscreen) flicker under an animated
+      // clip-path, so those screens get the browser's short crossfade.
+      const dpr = window.devicePixelRatio || 1;
+      const useWipe = window.innerWidth * window.innerHeight * dpr * dpr <= 10000000;
+      root.classList.toggle("vt-fade", !useWipe);
+
+      // Scene rendering pauses while .vt-active is set (see scene.js)
+      root.classList.add("vt-active");
+      const transition = document.startViewTransition(apply);
+      transition.finished.finally(() => root.classList.remove("vt-active"));
+
+      if (useWipe) {
+        transition.ready
+          .then(() => {
+            root.animate(
+              {
+                clipPath: [
+                  `circle(0px at ${x}px ${y}px)`,
+                  `circle(${radius}px at ${x}px ${y}px)`,
+                ],
+              },
+              {
+                duration: 700,
+                easing: "cubic-bezier(0.4, 0, 0.2, 1)",
+                pseudoElement: "::view-transition-new(root)",
+              }
+            );
+          })
+          .catch(() => {});
+      }
     } else {
       apply();
     }

@@ -75,7 +75,6 @@ import * as THREE from "./vendor/three.module.min.js";
     }
 
     renderer.setClearColor(bgColor, 1);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(bgColor.clone(), 4.5, 11.5);
@@ -227,6 +226,10 @@ import * as THREE from "./vendor/three.module.min.js";
       const rect = container.getBoundingClientRect();
       const width = Math.max(rect.width, 1);
       const height = Math.max(rect.height, 1);
+      // Keep the backing store under ~8MP so 5K fullscreen stays smooth
+      const cap = Math.min(window.devicePixelRatio || 1, 2);
+      const ratio = Math.max(1, Math.min(cap, Math.sqrt(8000000 / (width * height))));
+      renderer.setPixelRatio(ratio);
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
@@ -292,7 +295,8 @@ import * as THREE from "./vendor/three.module.min.js";
       const dt = Math.min((now - lastTime) / 1000, 0.1);
       lastTime = now;
 
-      if (!isIntersecting || document.hidden) {
+      // Hold the last frame while a theme view-transition is running
+      if (!isIntersecting || document.hidden || document.documentElement.classList.contains("vt-active")) {
         return;
       }
 
