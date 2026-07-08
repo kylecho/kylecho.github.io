@@ -165,18 +165,34 @@ html.has-3d-scene .terrain-scene canvas {
 }
 
 .status-dot {
+  position: relative;
   flex: none;
   width: 0.55rem;
   height: 0.55rem;
   border-radius: 50%;
   background: var(--night-soft);
-  box-shadow: 0 0 0 5px rgba(92, 124, 255, 0.15);
-  animation: status-pulse 3s ease-in-out infinite;
+  box-shadow: 0 0 0 4px rgba(92, 124, 255, 0.12);
+  animation: status-breathe 3.2s ease-in-out infinite;
 }
 
-@keyframes status-pulse {
-  0%, 100% { box-shadow: 0 0 0 4px rgba(92, 124, 255, 0.14); }
-  50% { box-shadow: 0 0 0 8px rgba(92, 124, 255, 0.05); }
+/* Radar ping: a thin ring drifts outward and dissolves */
+.status-dot::after {
+  position: absolute;
+  inset: -1px;
+  border: 1px solid var(--night-soft);
+  border-radius: 50%;
+  content: "";
+  animation: status-ping 3.2s cubic-bezier(0.25, 0.6, 0.3, 1) infinite;
+}
+
+@keyframes status-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+@keyframes status-ping {
+  0%, 18% { opacity: 0.7; transform: scale(1); }
+  70%, 100% { opacity: 0; transform: scale(3.2); }
 }
 
 .hero h1 {
