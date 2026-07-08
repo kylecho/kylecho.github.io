@@ -87,6 +87,10 @@
       hour12: false,
     });
     const tick = () => {
+      // Hold still during a theme wipe so the snapshot stays static
+      if (document.documentElement.classList.contains("vt-active")) {
+        return;
+      }
       clock.textContent = "SF " + formatter.format(new Date());
     };
     tick();
@@ -125,12 +129,15 @@
     });
 
     const loop = () => {
-      dotX += (targetX - dotX) * 0.5;
-      dotY += (targetY - dotY) * 0.5;
-      ringX += (targetX - ringX) * 0.18;
-      ringY += (targetY - ringY) * 0.18;
-      dot.style.transform = `translate3d(${dotX}px, ${dotY}px, 0)`;
-      ring.style.transform = `translate3d(${ringX}px, ${ringY}px, 0)`;
+      // Hold still during a theme wipe so the snapshot stays static
+      if (!document.documentElement.classList.contains("vt-active")) {
+        dotX += (targetX - dotX) * 0.5;
+        dotY += (targetY - dotY) * 0.5;
+        ringX += (targetX - ringX) * 0.18;
+        ringY += (targetY - ringY) * 0.18;
+        dot.style.transform = `translate3d(${dotX}px, ${dotY}px, 0)`;
+        ring.style.transform = `translate3d(${ringX}px, ${ringY}px, 0)`;
+      }
       requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);
@@ -178,36 +185,30 @@
         Math.max(y, window.innerHeight - y)
       );
 
-      // Snapshots past ~10MP (5K fullscreen) flicker under an animated
-      // clip-path, so those screens get the browser's short crossfade.
-      const dpr = window.devicePixelRatio || 1;
-      const useWipe = window.innerWidth * window.innerHeight * dpr * dpr <= 10000000;
-      root.classList.toggle("vt-fade", !useWipe);
-
-      // Scene rendering pauses while .vt-active is set (see scene.js)
+      // Everything animated (terrain, status dot, clock, cursor) pauses
+      // while .vt-active is set, keeping both snapshots static so the
+      // clip animation stays a pure compositor op even on 5K screens.
       root.classList.add("vt-active");
       const transition = document.startViewTransition(apply);
       transition.finished.finally(() => root.classList.remove("vt-active"));
 
-      if (useWipe) {
-        transition.ready
-          .then(() => {
-            root.animate(
-              {
-                clipPath: [
-                  `circle(0px at ${x}px ${y}px)`,
-                  `circle(${radius}px at ${x}px ${y}px)`,
-                ],
-              },
-              {
-                duration: 700,
-                easing: "cubic-bezier(0.4, 0, 0.2, 1)",
-                pseudoElement: "::view-transition-new(root)",
-              }
-            );
-          })
-          .catch(() => {});
-      }
+      transition.ready
+        .then(() => {
+          root.animate(
+            {
+              clipPath: [
+                `circle(0px at ${x}px ${y}px)`,
+                `circle(${radius}px at ${x}px ${y}px)`,
+              ],
+            },
+            {
+              duration: 700,
+              easing: "cubic-bezier(0.4, 0, 0.2, 1)",
+              pseudoElement: "::view-transition-new(root)",
+            }
+          );
+        })
+        .catch(() => {});
     } else {
       apply();
     }

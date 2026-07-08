@@ -55,17 +55,18 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* The circular wipe (started from the toggle) owns the animation.
-   Very large screens (html.vt-fade) keep the default crossfade instead —
-   animated clip-path over a 5K snapshot flickers. */
+/* The circular wipe (started from the toggle) owns the animation */
 ::view-transition-old(root),
 ::view-transition-new(root) {
+  animation: none;
   mix-blend-mode: normal;
 }
 
-html:not(.vt-fade)::view-transition-old(root),
-html:not(.vt-fade)::view-transition-new(root) {
-  animation: none;
+/* While the wipe runs (html.vt-active) every animation in the captured
+   page pauses, so huge 5K snapshots never re-rasterize mid-wipe */
+html.vt-active .status-dot,
+html.vt-active .status-dot::after {
+  animation-play-state: paused;
 }
 
 /* Film grain — one static tile, kept subtle */
