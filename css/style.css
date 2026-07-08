@@ -1,4 +1,5 @@
-:root {
+:root,
+[data-theme="dark"] {
   --bg: #070d1c;
   --bg-rgb: 7, 13, 28;
   --text: #f2f5fd;
@@ -55,18 +56,13 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* The circular wipe (started from the toggle) owns the animation */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}
-
-/* While the wipe runs (html.vt-active) every animation in the captured
-   page pauses, so huge 5K snapshots never re-rasterize mid-wipe */
-html.vt-active .status-dot,
-html.vt-active .status-dot::after {
-  animation-play-state: paused;
+/* Theme-toggle wave: a disc of the next theme's color, clipped and
+   grown from the toggle by main.js. Sits under the custom cursor. */
+.theme-splash {
+  position: fixed;
+  z-index: 9998;
+  inset: 0;
+  pointer-events: none;
 }
 
 /* Film grain — one static tile, kept subtle */

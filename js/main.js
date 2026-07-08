@@ -87,10 +87,6 @@
       hour12: false,
     });
     const tick = () => {
-      // Hold still during a theme wipe so the snapshot stays static
-      if (document.documentElement.classList.contains("vt-active")) {
-        return;
-      }
       clock.textContent = "SF " + formatter.format(new Date());
     };
     tick();
@@ -129,15 +125,12 @@
     });
 
     const loop = () => {
-      // Hold still during a theme wipe so the snapshot stays static
-      if (!document.documentElement.classList.contains("vt-active")) {
-        dotX += (targetX - dotX) * 0.5;
-        dotY += (targetY - dotY) * 0.5;
-        ringX += (targetX - ringX) * 0.18;
-        ringY += (targetY - ringY) * 0.18;
-        dot.style.transform = `translate3d(${dotX}px, ${dotY}px, 0)`;
-        ring.style.transform = `translate3d(${ringX}px, ${ringY}px, 0)`;
-      }
+      dotX += (targetX - dotX) * 0.5;
+      dotY += (targetY - dotY) * 0.5;
+      ringX += (targetX - ringX) * 0.18;
+      ringY += (targetY - ringY) * 0.18;
+      dot.style.transform = `translate3d(${dotX}px, ${dotY}px, 0)`;
+      ring.style.transform = `translate3d(${ringX}px, ${ringY}px, 0)`;
       requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);
@@ -163,6 +156,20 @@
   };
   syncUI();
 
+  // Reads a theme's --bg without switching to it: attribute selectors
+  // match the probe element directly
+  const themeBg = (theme) => {
+    const probe = document.createElement("div");
+    probe.dataset.theme = theme;
+    probe.style.display = "none";
+    document.body.appendChild(probe);
+    const bg = getComputedStyle(probe).getPropertyValue("--bg").trim();
+    probe.remove();
+    return bg;
+  };
+
+  let splashing = false;
+
   toggle.addEventListener("click", () => {
     const next = (root.dataset.theme || "dark") === "dark" ? "light" : "dark";
 
@@ -175,43 +182,52 @@
       window.dispatchEvent(new CustomEvent("themechange", { detail: { theme: next } }));
     };
 
-    // Circular wipe radiating from the toggle; plain swap without support
-    if (!reduced && document.startViewTransition) {
-      const rect = toggle.getBoundingClientRect();
-      const x = rect.left + rect.width / 2;
-      const y = rect.top + rect.height / 2;
-      const radius = Math.hypot(
-        Math.max(x, window.innerWidth - x),
-        Math.max(y, window.innerHeight - y)
-      );
-
-      // Everything animated (terrain, status dot, clock, cursor) pauses
-      // while .vt-active is set, keeping both snapshots static so the
-      // clip animation stays a pure compositor op even on 5K screens.
-      root.classList.add("vt-active");
-      const transition = document.startViewTransition(apply);
-      transition.finished.finally(() => root.classList.remove("vt-active"));
-
-      transition.ready
-        .then(() => {
-          root.animate(
-            {
-              clipPath: [
-                `circle(0px at ${x}px ${y}px)`,
-                `circle(${radius}px at ${x}px ${y}px)`,
-              ],
-            },
-            {
-              duration: 700,
-              easing: "cubic-bezier(0.4, 0, 0.2, 1)",
-              pseudoElement: "::view-transition-new(root)",
-            }
-          );
-        })
-        .catch(() => {});
-    } else {
+    if (reduced || splashing) {
       apply();
+      return;
     }
+
+    // A disc of the next theme's color washes out from the toggle, the
+    // theme swaps under full cover, then the page develops back in.
+    // One solid-color layer: no page snapshots, cheap at any screen size.
+    splashing = true;
+    const rect = toggle.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    const radius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    );
+
+    const splash = document.createElement("div");
+    splash.className = "theme-splash";
+    splash.style.background = themeBg(next);
+    splash.style.clipPath = `circle(0px at ${x}px ${y}px)`;
+    document.body.appendChild(splash);
+
+    const grow = splash.animate(
+      {
+        clipPath: [
+          `circle(0px at ${x}px ${y}px)`,
+          `circle(${radius}px at ${x}px ${y}px)`,
+        ],
+      },
+      { duration: 450, easing: "cubic-bezier(0.3, 0, 0.2, 1)", fill: "forwards" }
+    );
+
+    grow.finished
+      .then(() => {
+        apply();
+        return splash.animate(
+          { opacity: [1, 0] },
+          { duration: 350, easing: "ease", delay: 60, fill: "forwards" }
+        ).finished;
+      })
+      .catch(apply)
+      .finally(() => {
+        splash.remove();
+        splashing = false;
+      });
   });
 })();
 

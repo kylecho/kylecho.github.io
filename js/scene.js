@@ -295,8 +295,7 @@ import * as THREE from "./vendor/three.module.min.js";
       const dt = Math.min((now - lastTime) / 1000, 0.1);
       lastTime = now;
 
-      // Hold the last frame while a theme view-transition is running
-      if (!isIntersecting || document.hidden || document.documentElement.classList.contains("vt-active")) {
+      if (!isIntersecting || document.hidden) {
         return;
       }
 
