@@ -16,7 +16,13 @@ export default {
       ],
       answer: [
         {
-          p: "1. Fetch the root collection. 2. Extract the IDs you need, deduped with a `Set`. 3. Fetch dependent data in parallel with `Promise.all`. 4. Normalize results into by-ID lookup maps (`Object.fromEntries`) for O(1) access. 5. Compose the final structure by mapping over the original arrays, which preserves order for free.",
+          ol: [
+            "Fetch the root collection.",
+            "Extract the IDs you need, deduped with a `Set`.",
+            "Fetch dependent data in parallel with `Promise.all`.",
+            "Normalize results into by-ID lookup maps (`Object.fromEntries`) for O(1) access.",
+            "Compose the final structure by mapping over the original arrays, which preserves order for free.",
+          ],
         },
         {
           p: "Narrate the structure before writing code (“root fetch, extract IDs, parallelize, normalize, compose”) and the implementation becomes dictation. Hesitating on the structure is what reads as rusty. The steps themselves are not hard.",
@@ -77,8 +83,13 @@ console.timeEnd("load");`,
         {
           p: "The whole expression rejects after about 10ms with B's error, because `Promise.all` short-circuits on the first rejection. A and C keep running to completion anyway, since promises aren't cancelled by being ignored. Their results are discarded.",
         },
+        { p: "The follow-ups to know:" },
         {
-          p: "The follow-ups to know: `Promise.allSettled` when you want every outcome, a per-promise `.catch` when you want fallbacks without losing the fast-fail structure, and `AbortController` when you actually need the extra work stopped.",
+          ul: [
+            "`Promise.allSettled` when you want every outcome.",
+            "A per-promise `.catch` when you want fallbacks without losing the fast-fail structure.",
+            "`AbortController` when you actually need the extra work stopped.",
+          ],
         },
       ],
     },

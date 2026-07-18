@@ -158,8 +158,13 @@ console.log(a.inc(), b.dec());`,
   };
 }`,
         },
+        { p: "`JSON.stringify` as the key is the pragmatic default, but mention its limits:" },
         {
-          p: "`JSON.stringify` as the key is the pragmatic default, but mention its limits: it only works for serializable arguments, two equivalent objects with different key order produce different keys, and the cache grows without bound.",
+          ul: [
+            "It only works for serializable arguments.",
+            "Two equivalent objects with different key order produce different keys.",
+            "The cache grows without bound.",
+          ],
         },
         {
           p: "A good follow-up if memory comes up: for a single object argument, a `WeakMap` keyed on the object lets cache entries be garbage-collected along with their keys.",

@@ -129,6 +129,13 @@ function renderBlocks(blocks) {
       if (block.code !== undefined) {
         return `<pre class="code"><code>${highlight(block.code)}</code></pre>`;
       }
+      if (block.ol !== undefined || block.ul !== undefined) {
+        const tag = block.ol !== undefined ? "ol" : "ul";
+        const items = (block.ol || block.ul)
+          .map((item) => `<li>${inlineCode(item)}</li>`)
+          .join("");
+        return `<${tag} class="drill-list">${items}</${tag}>`;
+      }
       return `<p>${inlineCode(block.p)}</p>`;
     })
     .join("");

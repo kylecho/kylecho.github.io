@@ -212,8 +212,13 @@ export default {
         {
           p: "`IntersectionObserver` on a sentinel div is the modern answer; no scroll-event math, no throttling. The `loading` guard prevents the sentinel from firing three fetches while the first is in flight, and the effect re-subscribes as `page` and `loading` change so `loadMore` never runs with stale values.",
         },
+        { p: "Extensions to offer:" },
         {
-          p: "Extensions to offer: a `hasMore` flag to stop at the end, appending with functional updates (already there), and `rootMargin` to start loading before the sentinel is actually visible.",
+          ul: [
+            "A `hasMore` flag to stop at the end.",
+            "Appending with functional updates (already there).",
+            "`rootMargin` to start loading before the sentinel is actually visible.",
+          ],
         },
       ],
     },

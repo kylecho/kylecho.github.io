@@ -191,9 +191,15 @@ function Field({ name, ...props }) {
         {
           p: "Form owns state; Field consumes it. The tempting wrong design, where each Field holds its own state, makes validation and submission impossible to coordinate.",
         },
+        { p: "Natural follow-ups to be ready for:" },
         {
-          p: "Natural follow-ups to be ready for: validation injected as a prop (inversion of control), dynamic fields from a `map`, and nested names like `user.email`. Each slots into this skeleton without changing its shape.",
+          ul: [
+            "Validation injected as a prop (inversion of control).",
+            "Dynamic fields rendered from a `map`.",
+            "Nested names like `user.email`.",
+          ],
         },
+        { p: "Each slots into this skeleton without changing its shape." },
       ],
     },
     {
@@ -235,8 +241,16 @@ function Field({ name, ...props }) {
         },
       ],
       answer: [
+        { p: "Good fits:" },
         {
-          p: "Good fits: theme, auth, feature flags, dependency injection, and coordinated-but-infrequent state like a form or modal registry. Bad fits: anything high-frequency (keystrokes, animation frames, large objects that churn), because every update fans out to every consumer.",
+          ul: [
+            "Theme, auth, and feature flags.",
+            "Dependency injection (APIs, services).",
+            "Coordinated but infrequent state, like a form or modal registry.",
+          ],
+        },
+        {
+          p: "Bad fits: anything high-frequency (keystrokes, animation frames, large objects that churn), because every update fans out to every consumer.",
         },
         {
           p: "The one-liner: context is distribution, not state management. It transports state to consumers; it isn't built to manage fast-moving state. That's why form and store libraries (React Hook Form, Zustand) keep state outside React and use subscriptions, so consumers re-render only on the slice they read.",
