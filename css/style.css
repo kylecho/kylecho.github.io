@@ -439,8 +439,10 @@ html.has-3d-scene .terrain-scene canvas {
 .split .word {
   display: inline-block;
   overflow: hidden;
-  padding-bottom: 0.22em;
-  margin-bottom: -0.22em;
+  /* Negative letter-spacing pulls the box edge inside the last glyph's
+     ink; pad the clip region and pull the layout back with margins. */
+  padding: 0 0.12em 0.22em 0;
+  margin: 0 -0.12em -0.22em 0;
   vertical-align: top;
 }
 
