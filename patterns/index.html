@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Flashcard drills on advanced frontend patterns: closures, async data orchestration, React component design, and async UI. From ten years of building real-time collaboration systems and GraphQL platforms.">
+  <meta name="theme-color" content="#070d1c">
+
+  <title>Frontend patterns — Kyle Cho</title>
+
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (t !== "light" && t !== "dark") {
+          t = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        }
+        document.documentElement.dataset.theme = t;
+      } catch (e) {
+        document.documentElement.dataset.theme = "dark";
+      }
+    })();
+  </script>
+
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/patterns.css">
+</head>
+<body class="patterns-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <main class="patterns" id="main">
+    <header class="patterns-top">
+      <a class="patterns-home" href="../">&larr; Kyle Cho</a>
+
+      <button class="theme-toggle" type="button" aria-label="Switch to light mode">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none">
+          <mask id="theme-mask">
+            <rect width="24" height="24" fill="#fff"/>
+            <circle class="moon-bite" cx="17" cy="7" r="7" fill="#000"/>
+          </mask>
+          <circle class="sun-core" cx="12" cy="12" r="8" fill="currentColor" mask="url(#theme-mask)"/>
+          <g class="sun-rays" stroke="currentColor">
+            <line x1="12" y1="1.5" x2="12" y2="3.8"/>
+            <line x1="12" y1="20.2" x2="12" y2="22.5"/>
+            <line x1="1.5" y1="12" x2="3.8" y2="12"/>
+            <line x1="20.2" y1="12" x2="22.5" y2="12"/>
+            <line x1="4.6" y1="4.6" x2="6.2" y2="6.2"/>
+            <line x1="17.8" y1="17.8" x2="19.4" y2="19.4"/>
+            <line x1="4.6" y1="19.4" x2="6.2" y2="17.8"/>
+            <line x1="17.8" y1="6.2" x2="19.4" y2="4.6"/>
+          </g>
+        </svg>
+      </button>
+    </header>
+
+    <h1 data-split>Frontend patterns, as drills.</h1>
+
+    <p class="patterns-intro" data-reveal>
+      Flashcard drills on closures, async orchestration, and React
+      component design: the patterns that come up again and again in
+      senior frontend work. The material comes from ten years of
+      building real-time collaboration systems and GraphQL platforms.
+      Answer each card in your head before revealing it; recall trains
+      better than rereading.
+    </p>
+
+    <div id="app" class="patterns-app" data-reveal>
+      <noscript><p>These drills need JavaScript to run.</p></noscript>
+    </div>
+
+    <footer class="patterns-foot">
+      <span>© <span data-year-full>2026</span> Kyle Cho</span>
+      <span>Progress lives in your browser&rsquo;s local storage</span>
+    </footer>
+  </main>
+
+  <script src="../js/main.js"></script>
+  <script type="module" src="../js/patterns.js"></script>
+</body>
+</html>
