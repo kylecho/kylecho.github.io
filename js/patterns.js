@@ -43,78 +43,18 @@ function resetDeck(deckId) {
   saveStore(store);
 }
 
-// ---- tiny syntax highlighter --------------------------------------------
-
-const KEYWORDS = new Set(
-  ("const let var function return if else for while do new await async try catch " +
-    "finally throw class extends of in typeof instanceof delete void yield switch " +
-    "case break continue default import export from this super static").split(" ")
-);
-const LITERALS = new Set("true false null undefined NaN Infinity".split(" "));
+// ---- syntax highlighting (vendored Prism, jsx grammar) -------------------
 
 function escapeHtml(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-function renderPlainCode(text) {
-  return escapeHtml(text)
-    .replace(/[A-Za-z_$][\w$]*/g, (word) => {
-      if (KEYWORDS.has(word)) return `<span class="tok-kw">${word}</span>`;
-      if (LITERALS.has(word)) return `<span class="tok-lit">${word}</span>`;
-      return word;
-    })
-    .replace(/\b\d+(?:\.\d+)?\b/g, (num) => `<span class="tok-num">${num}</span>`);
-}
-
 function highlight(src) {
-  let out = "";
-  let plain = "";
-  let i = 0;
-
-  const flush = () => {
-    out += renderPlainCode(plain);
-    plain = "";
-  };
-
-  while (i < src.length) {
-    const two = src.slice(i, i + 2);
-    const ch = src[i];
-
-    if (two === "//") {
-      flush();
-      let end = src.indexOf("\n", i);
-      if (end === -1) end = src.length;
-      out += `<span class="tok-cm">${escapeHtml(src.slice(i, end))}</span>`;
-      i = end;
-    } else if (two === "/*") {
-      flush();
-      let end = src.indexOf("*/", i + 2);
-      end = end === -1 ? src.length : end + 2;
-      out += `<span class="tok-cm">${escapeHtml(src.slice(i, end))}</span>`;
-      i = end;
-    } else if (ch === '"' || ch === "'" || ch === "`") {
-      flush();
-      let j = i + 1;
-      while (j < src.length) {
-        if (src[j] === "\\") {
-          j += 2;
-        } else if (src[j] === ch || (ch !== "`" && src[j] === "\n")) {
-          j += 1;
-          break;
-        } else {
-          j += 1;
-        }
-      }
-      out += `<span class="tok-str">${escapeHtml(src.slice(i, j))}</span>`;
-      i = j;
-    } else {
-      plain += ch;
-      i += 1;
-    }
+  const prism = window.Prism;
+  if (prism && prism.languages && prism.languages.jsx) {
+    return prism.highlight(src, prism.languages.jsx, "jsx");
   }
-
-  flush();
-  return out;
+  return escapeHtml(src);
 }
 
 // ---- block rendering -----------------------------------------------------

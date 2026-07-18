@@ -333,11 +333,36 @@ pre.code code {
   font-size: 1em;
 }
 
-.tok-kw { color: var(--accent); font-weight: 600; }
-.tok-str { color: var(--code-str); }
-.tok-num { color: var(--code-num); }
-.tok-lit { color: var(--code-num); font-style: italic; }
-.tok-cm { color: var(--text-mute); font-style: italic; }
+/* Prism tokens mapped onto the site palette (both themes via vars) */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata { color: var(--text-mute); font-style: italic; }
+
+.token.keyword { color: var(--accent); font-weight: 600; }
+
+.token.string,
+.token.template-string,
+.token.attr-value,
+.token.regex { color: var(--code-str); }
+
+.token.number,
+.token.boolean,
+.token.constant { color: var(--code-num); }
+
+.token.function { font-weight: 600; }
+
+.token.class-name,
+.token.tag { color: var(--accent); }
+
+.token.tag .token.punctuation { color: var(--accent); }
+
+.token.attr-name { color: var(--code-num); }
+
+.token.punctuation,
+.token.operator { color: var(--text-soft); }
+
+.token.interpolation-punctuation { color: var(--accent); }
 
 .drill-actions {
   display: flex;
