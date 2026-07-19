@@ -293,7 +293,7 @@ function renderEnd() {
       </div>
     </section>`;
 
-  fireConfetti(clean ? 340 : 170);
+  fireConfetti(clean ? 180 : 90);
 
   app.querySelector("[data-again]").addEventListener("click", () => swapView(() => startSession(deck)));
   app.querySelector("[data-exit]").addEventListener("click", () => swapView(renderHome));
@@ -324,8 +324,9 @@ function bindKeys() {
 }
 
 // ---- confetti ------------------------------------------------------------
-// Two bursts from the top corners in the site palette. Skipped entirely
-// under reduced motion; canvas is removed once every piece has fallen out.
+// A gentle rain from the whole top edge in the site palette: pieces drift
+// down with a sinusoidal flutter. Skipped entirely under reduced motion;
+// canvas is removed once every piece has fallen out.
 
 function fireConfetti(count) {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -347,22 +348,20 @@ function fireConfetti(count) {
     .map((v) => styles.getPropertyValue(v).trim())
     .filter(Boolean);
 
-  const pieces = Array.from({ length: count }, (_, i) => {
-    const fromLeft = i % 2 === 0;
-    const angle = (fromLeft ? 32 : 148) + (Math.random() - 0.5) * 50;
-    const speed = 8 + Math.random() * 7;
-    return {
-      x: fromLeft ? -10 : w + 10,
-      y: -10 - Math.random() * 60,
-      vx: Math.cos((angle * Math.PI) / 180) * speed,
-      vy: Math.sin((angle * Math.PI) / 180) * speed,
-      size: 5 + Math.random() * 6,
-      rot: Math.random() * Math.PI,
-      vr: (Math.random() - 0.5) * 0.3,
-      color: colors[i % colors.length],
-      delay: Math.random() * 900,
-    };
-  });
+  const pieces = Array.from({ length: count }, (_, i) => ({
+    x: Math.random() * w,
+    y: -20 - Math.random() * h * 0.25,
+    vx: (Math.random() - 0.5) * 1.6,
+    vy: 1.5 + Math.random() * 2,
+    size: 4 + Math.random() * 5,
+    rot: Math.random() * Math.PI,
+    vr: (Math.random() - 0.5) * 0.2,
+    sway: 0.6 + Math.random() * 1.4, // horizontal flutter amplitude, px/frame
+    phase: Math.random() * Math.PI * 2,
+    freq: 1.5 + Math.random() * 2, // flutter speed, rad/s
+    color: colors[i % colors.length],
+    delay: Math.random() * 1500,
+  }));
 
   const started = performance.now();
 
@@ -376,9 +375,8 @@ function fireConfetti(count) {
         alive = true;
         continue;
       }
-      p.vy = Math.min(p.vy + 0.18, 5.5); // terminal velocity keeps the fall floaty
-      p.vx *= 0.99;
-      p.x += p.vx;
+      p.vy = Math.min(p.vy + 0.12, 3.8); // low terminal velocity: a drift, not a drop
+      p.x += p.vx + Math.sin((now / 1000) * p.freq + p.phase) * p.sway;
       p.y += p.vy;
       p.rot += p.vr;
       if (p.y < h + 20) alive = true;
@@ -391,7 +389,7 @@ function fireConfetti(count) {
       ctx.restore();
     }
 
-    if (alive && elapsed < 6000) {
+    if (alive && elapsed < 9000) {
       requestAnimationFrame(frame);
     } else {
       canvas.remove();
