@@ -79,9 +79,7 @@ body.patterns-page {
 }
 
 .deck-card {
-  position: relative;
   display: flex;
-  overflow: hidden;
   padding: clamp(1.25rem, 2.5vw, 1.75rem);
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -91,25 +89,6 @@ body.patterns-page {
   -webkit-backdrop-filter: blur(14px) saturate(140%);
   backdrop-filter: blur(14px) saturate(140%);
   transition: border-color 200ms ease;
-}
-
-/* Pointer-tracked specular highlight; --mx/--my set from patterns.js */
-.deck-card::after {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    240px circle at var(--mx, 50%) var(--my, 50%),
-    var(--glass-sheen),
-    transparent 62%
-  );
-  content: "";
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 300ms ease;
-}
-
-.deck-card:hover::after {
-  opacity: 1;
 }
 
 .deck-card:hover {
@@ -625,10 +604,6 @@ pre.code code {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .deck-card::after {
-    display: none;
-  }
-
   .end-dot,
   .drill > .drill-kicker,
   .drill > .drill-prompt,

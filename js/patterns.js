@@ -399,20 +399,5 @@ function fireConfetti(count) {
   requestAnimationFrame(frame);
 }
 
-// ---- glass sheen ---------------------------------------------------------
-// Feeds --mx/--my to the deck-card specular highlight. Gated to fine
-// pointers; the ::after layer is removed entirely under reduced motion.
-
-const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
-
-app.addEventListener("pointermove", (event) => {
-  if (!finePointer.matches) return;
-  const card = event.target.closest(".deck-card");
-  if (!card) return;
-  const rect = card.getBoundingClientRect();
-  card.style.setProperty("--mx", `${((event.clientX - rect.left) / rect.width) * 100}%`);
-  card.style.setProperty("--my", `${((event.clientY - rect.top) / rect.height) * 100}%`);
-});
-
 bindKeys();
 renderHome();
