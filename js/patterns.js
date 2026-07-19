@@ -239,6 +239,7 @@ function renderEnd() {
   const total = deck.cards.length;
   const got = deck.cards.filter((c) => firstResults.get(c.id) === "got").length;
   const missedCards = deck.cards.filter((c) => firstResults.get(c.id) === "missed");
+  const clean = got === total;
 
   const missedList = missedCards.length
     ? `<div class="end-missed">
@@ -249,18 +250,29 @@ function renderEnd() {
       </div>`
     : "";
 
+  const dots = deck.cards
+    .map((c, i) => {
+      const gotIt = firstResults.get(c.id) === "got";
+      return `<span class="end-dot${gotIt ? " is-got" : ""}"
+        style="animation-delay: ${120 + i * 50}ms"
+        title="${c.title} — ${gotIt ? "got it" : "missed"}"></span>`;
+    })
+    .join("");
+
   app.innerHTML = `
     <section class="session session-end">
-      <h2>Deck complete.</h2>
-      <p class="end-score">${got} of ${total} on the first try${
-        got === total ? " — clean sweep." : "."
-      }</p>
+      <p class="deck-meta">${deck.title} &middot; complete</p>
+      <h2 class="end-title">${clean ? "Clean sweep." : "Deck complete."}</h2>
+      <p class="end-score">${got} of ${total} on the first try.</p>
+      <div class="end-dots" aria-hidden="true">${dots}</div>
       ${missedList}
       <div class="drill-actions">
         <button class="btn btn-primary" type="button" data-again>Run it again</button>
         <button class="btn" type="button" data-exit>All decks</button>
       </div>
     </section>`;
+
+  fireConfetti(clean ? 140 : 70);
 
   app.querySelector("[data-again]").addEventListener("click", () => startSession(deck));
   app.querySelector("[data-exit]").addEventListener("click", renderHome);
@@ -288,6 +300,78 @@ function bindKeys() {
       renderHome();
     }
   });
+}
+
+// ---- confetti ------------------------------------------------------------
+// Two bursts from the bottom corners in the site palette. Skipped entirely
+// under reduced motion; canvas is removed once every piece has fallen out.
+
+function fireConfetti(count) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const canvas = document.createElement("canvas");
+  canvas.className = "confetti";
+  document.body.appendChild(canvas);
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  const ctx = canvas.getContext("2d");
+  ctx.scale(dpr, dpr);
+
+  const styles = getComputedStyle(document.documentElement);
+  const colors = ["--accent", "--mesh-high", "--mesh-dot", "--text"]
+    .map((v) => styles.getPropertyValue(v).trim())
+    .filter(Boolean);
+
+  const pieces = Array.from({ length: count }, (_, i) => {
+    const fromLeft = i % 2 === 0;
+    const angle = (fromLeft ? -60 : -120) + (Math.random() - 0.5) * 40;
+    const speed = 11 + Math.random() * 7;
+    return {
+      x: fromLeft ? -10 : w + 10,
+      y: h * (0.75 + Math.random() * 0.2),
+      vx: Math.cos((angle * Math.PI) / 180) * speed,
+      vy: Math.sin((angle * Math.PI) / 180) * speed,
+      size: 4 + Math.random() * 5,
+      rot: Math.random() * Math.PI,
+      vr: (Math.random() - 0.5) * 0.3,
+      color: colors[i % colors.length],
+    };
+  });
+
+  const started = performance.now();
+
+  function frame(now) {
+    ctx.clearRect(0, 0, w, h);
+    let alive = false;
+
+    for (const p of pieces) {
+      p.vy += 0.22;
+      p.vx *= 0.99;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+      if (p.y < h + 20) alive = true;
+
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+      ctx.restore();
+    }
+
+    if (alive && now - started < 5000) {
+      requestAnimationFrame(frame);
+    } else {
+      canvas.remove();
+    }
+  }
+
+  requestAnimationFrame(frame);
 }
 
 // ---- glass sheen ---------------------------------------------------------
