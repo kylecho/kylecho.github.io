@@ -105,7 +105,11 @@ const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 // keyboard grading is never blocked.
 function swapView(render) {
   if (document.startViewTransition && !reducedMotion.matches) {
-    document.startViewTransition(render);
+    const transition = document.startViewTransition(render);
+    // A fast follow-up render skips the active transition; that's fine,
+    // but the skip rejects these promises and would log as an error.
+    transition.ready.catch(() => {});
+    transition.finished.catch(() => {});
   } else {
     render();
   }
@@ -289,7 +293,7 @@ function renderEnd() {
       </div>
     </section>`;
 
-  fireConfetti(clean ? 140 : 70);
+  fireConfetti(clean ? 340 : 170);
 
   app.querySelector("[data-again]").addEventListener("click", () => swapView(() => startSession(deck)));
   app.querySelector("[data-exit]").addEventListener("click", () => swapView(renderHome));
@@ -345,17 +349,18 @@ function fireConfetti(count) {
 
   const pieces = Array.from({ length: count }, (_, i) => {
     const fromLeft = i % 2 === 0;
-    const angle = (fromLeft ? -60 : -120) + (Math.random() - 0.5) * 40;
-    const speed = 11 + Math.random() * 7;
+    const angle = (fromLeft ? -58 : -122) + (Math.random() - 0.5) * 50;
+    const speed = 10 + Math.random() * 9;
     return {
       x: fromLeft ? -10 : w + 10,
-      y: h * (0.75 + Math.random() * 0.2),
+      y: h * (0.7 + Math.random() * 0.28),
       vx: Math.cos((angle * Math.PI) / 180) * speed,
       vy: Math.sin((angle * Math.PI) / 180) * speed,
-      size: 4 + Math.random() * 5,
+      size: 5 + Math.random() * 6,
       rot: Math.random() * Math.PI,
       vr: (Math.random() - 0.5) * 0.3,
       color: colors[i % colors.length],
+      delay: Math.random() * 500,
     };
   });
 
@@ -364,8 +369,13 @@ function fireConfetti(count) {
   function frame(now) {
     ctx.clearRect(0, 0, w, h);
     let alive = false;
+    const elapsed = now - started;
 
     for (const p of pieces) {
+      if (p.delay > elapsed) {
+        alive = true;
+        continue;
+      }
       p.vy += 0.22;
       p.vx *= 0.99;
       p.x += p.vx;
@@ -381,7 +391,7 @@ function fireConfetti(count) {
       ctx.restore();
     }
 
-    if (alive && now - started < 5000) {
+    if (alive && elapsed < 6000) {
       requestAnimationFrame(frame);
     } else {
       canvas.remove();
