@@ -14,6 +14,12 @@
   --grid-tex:
     repeating-linear-gradient(90deg, var(--grid-line) 0 1px, transparent 1px 72px),
     repeating-linear-gradient(0deg, var(--grid-line) 0 1px, transparent 1px 72px);
+  --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+  --glass-rim:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+  --glass-drop: 0 12px 32px rgba(3, 8, 20, 0.35);
+  --glass-sheen: rgba(255, 255, 255, 0.08);
   --page-pad: clamp(1.25rem, 4vw, 4.5rem);
   --max-width: 1600px;
   --sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -33,6 +39,12 @@
   --mesh-low: #c3cfec;
   --mesh-high: #3d5ef0;
   --mesh-dot: #2247e8;
+  --glass-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.28));
+  --glass-rim:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.3);
+  --glass-drop: 0 12px 32px rgba(12, 20, 40, 0.1);
+  --glass-sheen: rgba(255, 255, 255, 0.75);
 }
 
 *,
@@ -232,8 +244,11 @@ html.has-3d-scene .terrain-scene canvas {
   justify-content: center;
   border: 1px solid var(--line);
   border-radius: 50%;
-  background: transparent;
+  background: var(--glass-bg);
+  box-shadow: var(--glass-rim);
   color: var(--text);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(140%);
   transition: border-color 200ms ease, background 200ms ease, transform 200ms ease;
 }
 
@@ -398,8 +413,13 @@ html.has-3d-scene .terrain-scene canvas {
   bottom: 1.5rem;
   left: 50%;
   padding: 0.85rem 1.25rem;
-  background: var(--text);
-  color: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  box-shadow: var(--glass-rim), var(--glass-drop);
+  color: var(--text);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -414,6 +434,21 @@ html.has-3d-scene .terrain-scene canvas {
 .copy-toast.is-visible {
   opacity: 1;
   transform: translate(-50%, 0);
+}
+
+/* Solid fallbacks where backdrop-filter isn't supported */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .theme-toggle {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .copy-toast {
+    border: none;
+    background: var(--text);
+    box-shadow: none;
+    color: var(--bg);
+  }
 }
 
 /* ------------------------------------------------------ reveal / split */

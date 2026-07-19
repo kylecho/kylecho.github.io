@@ -79,12 +79,37 @@ body.patterns-page {
 }
 
 .deck-card {
+  position: relative;
   display: flex;
+  overflow: hidden;
   padding: clamp(1.25rem, 2.5vw, 1.75rem);
   border: 1px solid var(--line);
-  background: var(--panel);
+  border-radius: 16px;
+  background: var(--glass-bg);
+  box-shadow: var(--glass-rim), var(--glass-drop);
   flex-direction: column;
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
   transition: border-color 200ms ease;
+}
+
+/* Pointer-tracked specular highlight; --mx/--my set from patterns.js */
+.deck-card::after {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    240px circle at var(--mx, 50%) var(--my, 50%),
+    var(--glass-sheen),
+    transparent 62%
+  );
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+}
+
+.deck-card:hover::after {
+  opacity: 1;
 }
 
 .deck-card:hover {
@@ -125,12 +150,14 @@ body.patterns-page {
   overflow: hidden;
   height: 2px;
   flex: 1;
+  border-radius: 999px;
   background: var(--line);
 }
 
 .deck-bar-fill {
   display: block;
   height: 100%;
+  border-radius: 999px;
   background: var(--accent);
   transition: width 400ms ease;
 }
@@ -166,6 +193,7 @@ body.patterns-page {
 .btn {
   padding: 0.8rem 1.4rem;
   border: 1px solid var(--line);
+  border-radius: 999px;
   background: transparent;
   color: var(--text);
   font-size: 0.72rem;
@@ -219,7 +247,11 @@ body.patterns-page {
   padding: clamp(1.25rem, 3vw, 2rem);
   margin-top: 1rem;
   border: 1px solid var(--line);
-  background: var(--panel);
+  border-radius: 16px;
+  background: var(--glass-bg);
+  box-shadow: var(--glass-rim), var(--glass-drop);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
 }
 
 .drill-kicker {
@@ -230,8 +262,9 @@ body.patterns-page {
 }
 
 .drill-type {
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0.55rem;
   border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  border-radius: 999px;
   color: var(--accent);
   font-family: var(--mono);
   font-size: 0.64rem;
@@ -323,6 +356,7 @@ pre.code {
   max-width: 100%;
   padding: 1rem 1.15rem;
   border: 1px solid var(--line);
+  border-radius: 10px;
   margin: 1rem 0 0;
   background: var(--code-bg);
   font-size: 0.84rem;
@@ -456,5 +490,20 @@ pre.code code {
   .patterns-foot {
     flex-direction: column;
     gap: 0.4rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deck-card::after {
+    display: none;
+  }
+}
+
+/* Solid fallbacks where backdrop-filter isn't supported */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .deck-card,
+  .drill {
+    background: var(--panel);
+    box-shadow: none;
   }
 }
