@@ -11,7 +11,7 @@ export default {
       title: "Controlled vs uncontrolled",
       prompt: [
         {
-          p: "The warm-up question in nearly every React interview: controlled vs uncontrolled inputs. Define both and give the tradeoff.",
+          p: "The distinction the rest of form architecture sits on: controlled vs uncontrolled inputs. Define both and give the tradeoff.",
         },
       ],
       answer: [
@@ -311,7 +311,7 @@ function Field({ name, ...props }) {
           p: "The ref is re-pointed at the fresh closure on every render, while the returned wrapper (stable, empty deps) reads through it at call time, so the identity stays fixed and the values stay current.",
         },
         {
-          p: "Reach for this when a memoized child needs a callback that sees current state, or an effect needs a handler without re-subscribing on every change. React's RFC version assigns the ref in a layout effect to avoid render-phase writes; mention that if asked, but don't hand-roll it in an interview.",
+          p: "Reach for this when a memoized child needs a callback that sees current state, or an effect needs a handler without re-subscribing on every change. React's RFC version assigns the ref in a layout effect to avoid render-phase writes; know that refinement exists, but the simple version above is the one worth having by heart.",
         },
       ],
     },

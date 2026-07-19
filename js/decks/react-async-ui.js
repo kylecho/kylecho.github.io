@@ -159,7 +159,7 @@ export default {
           p: "Each concern has a home: input state is local and instant, `useDebounce` decides when a query is worth sending, and `useFetch` handles the request lifecycle. The component just wires them together, and that separation is most of what's being tested.",
         },
         {
-          p: "Make the distinction explicit if asked: debouncing reduces how many requests fire, while the staleness check inside `useFetch` handles out-of-order responses. They solve different problems, and you need both solved.",
+          p: "The distinction worth keeping sharp: debouncing reduces how many requests fire, while the staleness check inside `useFetch` handles out-of-order responses. They solve different problems, and you need both solved.",
         },
       ],
     },
@@ -266,7 +266,7 @@ function List({ items }) {
       title: "The three states are UX",
       prompt: [
         {
-          p: "A component fetches data. What does a complete rendering of it look like, and what's the mistake interviewers are watching for?",
+          p: "A component fetches data. What does a complete rendering of it look like, and which part usually gets dropped?",
         },
       ],
       answer: [
@@ -280,7 +280,7 @@ function List({ items }) {
 }`,
         },
         {
-          p: "All three states rendered, with an error state that is actionable rather than decorative. A retry button wired to `refetch` is the part candidates skip, and it's the reason `useFetch` exposes `refetch` at all: recovery is part of the hook's contract.",
+          p: "All three states rendered, with an error state that is actionable rather than decorative. A retry button wired to `refetch` is the part that usually gets skipped, and it's the reason `useFetch` exposes `refetch` at all: recovery is part of the hook's contract.",
         },
         {
           p: "If there's room, mention the states this model doesn't capture: refreshing while stale data is still visible, and empty results versus no results yet. Those come up in real products more than in exercises.",

@@ -314,6 +314,10 @@ ul.drill-list li::before {
   font-size: 0.85em;
 }
 
+code.nb {
+  white-space: nowrap;
+}
+
 pre.code {
   overflow-x: auto;
   max-width: 100%;

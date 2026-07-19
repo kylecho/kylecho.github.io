@@ -65,7 +65,7 @@ console.log(a.inc(), b.dec());`,
       title: "Define it cleanly",
       prompt: [
         {
-          p: "Some version of “what is a closure?” comes up constantly. Give a two-sentence answer that holds up to follow-up questions.",
+          p: "“What is a closure?” is a question you keep answering for years — in code review, while mentoring, in design docs. Give a two-sentence answer that survives follow-up questions.",
         },
       ],
       answer: [
@@ -193,10 +193,10 @@ console.log(a.inc(), b.dec());`,
 };`,
         },
         {
-          p: "This shape, taking a function and returning a compatible function with a policy wrapped around it, is the one to practice. “Wrap this API with retry / caching / logging” is both a real interview prompt and a thing you end up writing at work.",
+          p: "This shape, taking a function and returning a compatible function with a policy wrapped around it, is the one to practice. “Wrap this API with retry / caching / logging” shows up in every codebase that talks to a network.",
         },
         {
-          p: "The `await` inside `try` is essential: without it the promise escapes the block and rejections skip the `catch`. Offer exponential backoff as a spoken extension rather than building it unprompted.",
+          p: "The `await` inside `try` is essential: without it the promise escapes the block and rejections skip the `catch`. Exponential backoff and jitter slot into the loop without changing its shape; add them when the failure mode is load rather than flakiness.",
         },
       ],
     },
@@ -246,7 +246,7 @@ const compose = (...fns) => x =>
           p: "`1`. The effect runs once, so the interval callback closes over the first render's `count`, which is 0, and every tick calls `setCount(0 + 1)`. After the first update the state never changes again.",
         },
         {
-          p: "The fix is the functional update, `setCount(c => c + 1)`, which reads current state instead of captured state. Mechanically this is the `var` loop again: a callback outliving the value it captured. Interviewers listen for the words “stale closure.”",
+          p: "The fix is the functional update, `setCount(c => c + 1)`, which reads current state instead of captured state. Mechanically this is the `var` loop again: a callback outliving the value it captured. The failure has a name, “stale closure,” and knowing it matters — it's the search term that finds you the fix.",
         },
       ],
     },

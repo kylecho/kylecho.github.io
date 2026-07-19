@@ -25,10 +25,10 @@ export default {
           ],
         },
         {
-          p: "Narrate the structure before writing code (“root fetch, extract IDs, parallelize, normalize, compose”) and the implementation becomes dictation. Hesitating on the structure is what reads as rusty. The steps themselves are not hard.",
+          p: "Name the structure before writing code (“root fetch, extract IDs, parallelize, normalize, compose”) and the implementation becomes dictation. The steps themselves are not hard; fluency is knowing them as one shape rather than five separate decisions.",
         },
         {
-          p: "It isn't an interview invention, either. This is the shape of a GraphQL resolver fan-out: root query first, then batched entity loads.",
+          p: "It isn't a textbook invention, either. This is the shape of a GraphQL resolver fan-out: root query first, then batched entity loads.",
         },
       ],
     },
@@ -61,7 +61,7 @@ console.timeEnd("load");`,
 // ~100ms`,
         },
         {
-          p: "Sequential awaits on independent requests is the most common async red flag in interviews. Await sequentially only when a request needs the previous response.",
+          p: "Sequential awaits on independent requests is the most common async mistake in real codebases, partly because it hides in code that works — just slowly. Await sequentially only when a request needs the previous response.",
         },
       ],
     },
@@ -174,7 +174,7 @@ async function loadOrders() {
           p: "Dedupe before chunking, or shared products get fetched repeatedly. Composing from each order's original `productIds` is what preserves order; responses can arrive in any sequence because the lookup map absorbs the difference.",
         },
         {
-          p: "Mention a concurrency limit as an extension (so 40 chunks don't become 40 simultaneous requests) without building it. If the conversation goes deeper, this is DataLoader territory: batching and per-request caching is what GraphQL servers do behind every resolver.",
+          p: "A concurrency limit is the natural extension, so 40 chunks don't become 40 simultaneous requests. Past that, this is DataLoader territory: batching and per-request caching is what GraphQL servers do behind every resolver.",
         },
       ],
     },
@@ -313,10 +313,10 @@ fetchComments(ids) // -> [{ id, text, userId }]`,
 }`,
         },
         {
-          p: "The dependency chain forces one sequencing decision: user IDs come from both posts and comments, so a single deduped user fetch has to wait for comments. The alternative fetches author users in parallel with comments, then commenter users after; it's still two rounds, but author data arrives a round earlier at the cost of an extra request. Either answer is fine if you show you chose it.",
+          p: "The dependency chain forces one sequencing decision: user IDs come from both posts and comments, so a single deduped user fetch has to wait for comments. The alternative fetches author users in parallel with comments, then commenter users after; it's still two rounds, but author data arrives a round earlier at the cost of an extra request. Either answer is fine as long as the sequencing is a deliberate choice.",
         },
         {
-          p: "Explaining the five-step structure while you write matters as much as the code, which is just the shape from the first card applied twice.",
+          p: "The code is just the shape from the first card applied twice; recognizing that before writing a line is most of the work.",
         },
       ],
     },
@@ -326,7 +326,7 @@ fetchComments(ids) // -> [{ id, text, userId }]`,
       title: "Why the lookup map",
       prompt: [
         {
-          p: "Your compose step needs to attach a user to each of 500 comments. Why do interviewers care whether you use `.find()` or a lookup map?",
+          p: "Your compose step needs to attach a user to each of 500 comments. Why does the choice between `.find()` and a lookup map matter?",
         },
       ],
       answer: [

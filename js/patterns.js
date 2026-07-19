@@ -2,8 +2,9 @@ import closures from "./decks/closures.js";
 import asyncOrchestration from "./decks/async-orchestration.js";
 import reactPatterns from "./decks/react-patterns.js";
 import reactAsyncUi from "./decks/react-async-ui.js";
+import frontendSystemDesign from "./decks/frontend-system-design.js";
 
-const decks = [closures, asyncOrchestration, reactPatterns, reactAsyncUi];
+const decks = [closures, asyncOrchestration, reactPatterns, reactAsyncUi, frontendSystemDesign];
 const app = document.getElementById("app");
 
 // ---- persistence ---------------------------------------------------------
@@ -60,7 +61,11 @@ function highlight(src) {
 // ---- block rendering -----------------------------------------------------
 
 function inlineCode(text) {
-  return escapeHtml(text).replace(/`([^`]+)`/g, "<code>$1</code>");
+  // Space-free tokens get .nb (no-break) so they wrap as a unit instead of
+  // splitting at hyphens or dots mid-token.
+  return escapeHtml(text).replace(/`([^`]+)`/g, (m, c) =>
+    `<code${/\s/.test(c) ? "" : ' class="nb"'}>${c}</code>`
+  );
 }
 
 function renderBlocks(blocks) {
@@ -72,7 +77,7 @@ function renderBlocks(blocks) {
       if (block.ol !== undefined || block.ul !== undefined) {
         const tag = block.ol !== undefined ? "ol" : "ul";
         const items = (block.ol || block.ul)
-          .map((item) => `<li>${inlineCode(item)}</li>`)
+          .map((item) => `<li><span>${inlineCode(item)}</span></li>`)
           .join("");
         return `<${tag} class="drill-list">${items}</${tag}>`;
       }
@@ -85,6 +90,7 @@ const TYPE_LABELS = {
   predict: "Predict",
   implement: "Implement",
   recall: "Recall",
+  design: "Design",
 };
 
 // ---- views ---------------------------------------------------------------
@@ -238,7 +244,7 @@ function renderEnd() {
     ? `<div class="end-missed">
         <p class="deck-meta">Worth another pass</p>
         <ul>${missedCards
-          .map((c) => `<li>${TYPE_LABELS[c.type]} — ${c.title}</li>`)
+          .map((c) => `<li><span>${TYPE_LABELS[c.type]} — ${c.title}</span></li>`)
           .join("")}</ul>
       </div>`
     : "";
