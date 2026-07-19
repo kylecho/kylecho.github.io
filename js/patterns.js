@@ -98,6 +98,19 @@ const TYPE_LABELS = {
 let session = null;
 let keysBound = false;
 
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+// Screen-level changes (home ⇄ session ⇄ end) get a view transition;
+// card-to-card advances use the .drill entrance animation instead so fast
+// keyboard grading is never blocked.
+function swapView(render) {
+  if (document.startViewTransition && !reducedMotion.matches) {
+    document.startViewTransition(render);
+  } else {
+    render();
+  }
+}
+
 function renderHome() {
   session = null;
 
@@ -132,7 +145,7 @@ function renderHome() {
   app.querySelectorAll("[data-start]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const deck = decks.find((d) => d.id === btn.dataset.start);
-      startSession(deck);
+      swapView(() => startSession(deck));
     });
   });
 
@@ -166,11 +179,14 @@ function renderCard() {
     ? `Review · ${idx + 1} / ${round.length}`
     : `${idx + 1} / ${round.length}`;
 
+  const ticked = session.justGraded;
+  session.justGraded = false;
+
   app.innerHTML = `
     <section class="session">
       <div class="session-top">
         <button class="link-back" type="button" data-exit>&larr; All decks</button>
-        <span class="session-count">${deck.title} · ${roundLabel}</span>
+        <span class="session-count${ticked ? " is-ticked" : ""}">${deck.title} · ${roundLabel}</span>
       </div>
       <article class="drill" role="group" aria-label="Card ${idx + 1} of ${round.length}">
         <p class="drill-kicker">
@@ -188,7 +204,7 @@ function renderCard() {
       </article>
     </section>`;
 
-  app.querySelector("[data-exit]").addEventListener("click", renderHome);
+  app.querySelector("[data-exit]").addEventListener("click", () => swapView(renderHome));
   app.querySelector("[data-reveal-btn]").addEventListener("click", reveal);
   app.querySelectorAll("[data-grade]").forEach((btn) => {
     btn.addEventListener("click", () => grade(btn.dataset.grade));
@@ -220,6 +236,7 @@ function grade(result) {
   }
 
   session.idx += 1;
+  session.justGraded = true;
 
   if (session.idx < session.round.length) {
     renderCard();
@@ -230,7 +247,7 @@ function grade(result) {
     session.isReview = true;
     renderCard();
   } else {
-    renderEnd();
+    swapView(renderEnd);
   }
 }
 
@@ -274,8 +291,8 @@ function renderEnd() {
 
   fireConfetti(clean ? 140 : 70);
 
-  app.querySelector("[data-again]").addEventListener("click", () => startSession(deck));
-  app.querySelector("[data-exit]").addEventListener("click", renderHome);
+  app.querySelector("[data-again]").addEventListener("click", () => swapView(() => startSession(deck)));
+  app.querySelector("[data-exit]").addEventListener("click", () => swapView(renderHome));
   app.querySelector("[data-again]").focus();
   session = null;
 }
@@ -297,7 +314,7 @@ function bindKeys() {
     } else if (event.key === "2" || event.key === "ArrowRight") {
       grade("got");
     } else if (event.key === "Escape") {
-      renderHome();
+      swapView(renderHome);
     }
   });
 }

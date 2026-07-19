@@ -201,7 +201,15 @@ body.patterns-page {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: border-color 200ms ease, background 200ms ease, color 200ms ease;
+  transition:
+    border-color 200ms ease,
+    background 200ms ease,
+    color 200ms ease,
+    transform 90ms ease;
+}
+
+.btn:active {
+  transform: scale(0.96);
 }
 
 .btn:hover {
@@ -243,6 +251,17 @@ body.patterns-page {
   text-transform: uppercase;
 }
 
+/* Acknowledges a registered grade as the counter advances */
+.session-count.is-ticked {
+  animation: count-tick 450ms ease;
+}
+
+@keyframes count-tick {
+  30% {
+    color: var(--accent);
+  }
+}
+
 .drill {
   padding: clamp(1.25rem, 3vw, 2rem);
   margin-top: 1rem;
@@ -252,6 +271,14 @@ body.patterns-page {
   box-shadow: var(--glass-rim), var(--glass-drop);
   -webkit-backdrop-filter: blur(14px) saturate(140%);
   backdrop-filter: blur(14px) saturate(140%);
+  animation: drill-in 200ms ease both;
+}
+
+@keyframes drill-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
 }
 
 .drill-kicker {
@@ -281,6 +308,18 @@ body.patterns-page {
 .drill-prompt,
 .drill-answer {
   margin-top: 1.25rem;
+}
+
+/* Plays when [hidden] is removed on reveal, not on initial render */
+.drill-answer {
+  animation: reveal-in 240ms ease both;
+}
+
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
 }
 
 .drill-prompt p,
@@ -532,13 +571,42 @@ pre.code code {
   }
 }
 
+/* Screen-level view transitions (home ⇄ session ⇄ end), via swapView() */
+::view-transition-old(root) {
+  animation: vt-out 140ms ease both;
+}
+
+::view-transition-new(root) {
+  animation: vt-in 220ms ease both;
+}
+
+@keyframes vt-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .deck-card::after {
     display: none;
   }
 
-  .end-dot {
+  .end-dot,
+  .drill,
+  .drill-answer,
+  .session-count.is-ticked {
     animation: none;
+  }
+
+  .btn:active {
+    transform: none;
   }
 }
 
