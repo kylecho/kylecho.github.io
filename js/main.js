@@ -93,6 +93,34 @@
     setInterval(tick, 1000);
   }
 
+  // ---- magnetic buttons (fine pointers only) -----------------------------
+  // .btn leans toward the pointer via --tx/--ty; CSS composes them with the
+  // :active squeeze. Delegated, since the drill flow re-renders its buttons.
+  if (!reduced && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    document.addEventListener(
+      "pointermove",
+      (event) => {
+        const btn = event.target.closest(".btn");
+        if (!btn) return;
+        const rect = btn.getBoundingClientRect();
+        btn.style.setProperty("--tx", `${(event.clientX - rect.left - rect.width / 2) * 0.18}px`);
+        btn.style.setProperty("--ty", `${(event.clientY - rect.top - rect.height / 2) * 0.3}px`);
+      },
+      { passive: true }
+    );
+
+    document.addEventListener(
+      "pointerout",
+      (event) => {
+        const btn = event.target.closest(".btn");
+        if (!btn || (event.relatedTarget && btn.contains(event.relatedTarget))) return;
+        btn.style.setProperty("--tx", "0px");
+        btn.style.setProperty("--ty", "0px");
+      },
+      { passive: true }
+    );
+  }
+
   // ---- custom cursor (fine pointers only) --------------------------------
   if (!reduced && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
     const dot = document.createElement("div");

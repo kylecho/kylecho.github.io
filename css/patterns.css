@@ -201,6 +201,8 @@ body.patterns-page {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   cursor: pointer;
+  /* --tx/--ty: magnetic lean toward the pointer, set from main.js */
+  transform: translate(var(--tx, 0px), var(--ty, 0px));
   transition:
     border-color 200ms ease,
     background 200ms ease,
@@ -209,7 +211,7 @@ body.patterns-page {
 }
 
 .btn:active {
-  transform: scale(0.96);
+  transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(0.96);
 }
 
 .btn:hover {
