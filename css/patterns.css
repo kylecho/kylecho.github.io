@@ -271,6 +271,14 @@ body.patterns-page {
   box-shadow: var(--glass-rim), var(--glass-drop);
   -webkit-backdrop-filter: blur(14px) saturate(140%);
   backdrop-filter: blur(14px) saturate(140%);
+}
+
+/* Animate the card's contents, never .drill itself: animating opacity or
+   transform on the glass element blanks its backdrop-filter until done */
+.drill > .drill-kicker,
+.drill > .drill-prompt,
+.drill > .drill-actions,
+.drill > .drill-keys {
   animation: drill-in 200ms ease both;
 }
 
@@ -620,7 +628,10 @@ pre.code code {
   }
 
   .end-dot,
-  .drill,
+  .drill > .drill-kicker,
+  .drill > .drill-prompt,
+  .drill > .drill-actions,
+  .drill > .drill-keys,
   .drill-answer,
   .session-count.is-ticked {
     animation: none;
