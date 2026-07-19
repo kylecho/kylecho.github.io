@@ -324,7 +324,7 @@ function bindKeys() {
 }
 
 // ---- confetti ------------------------------------------------------------
-// Two bursts from the bottom corners in the site palette. Skipped entirely
+// Two bursts from the top corners in the site palette. Skipped entirely
 // under reduced motion; canvas is removed once every piece has fallen out.
 
 function fireConfetti(count) {
@@ -349,18 +349,18 @@ function fireConfetti(count) {
 
   const pieces = Array.from({ length: count }, (_, i) => {
     const fromLeft = i % 2 === 0;
-    const angle = (fromLeft ? -58 : -122) + (Math.random() - 0.5) * 50;
-    const speed = 10 + Math.random() * 9;
+    const angle = (fromLeft ? 32 : 148) + (Math.random() - 0.5) * 50;
+    const speed = 8 + Math.random() * 7;
     return {
       x: fromLeft ? -10 : w + 10,
-      y: h * (0.7 + Math.random() * 0.28),
+      y: -10 - Math.random() * 60,
       vx: Math.cos((angle * Math.PI) / 180) * speed,
       vy: Math.sin((angle * Math.PI) / 180) * speed,
       size: 5 + Math.random() * 6,
       rot: Math.random() * Math.PI,
       vr: (Math.random() - 0.5) * 0.3,
       color: colors[i % colors.length],
-      delay: Math.random() * 500,
+      delay: Math.random() * 900,
     };
   });
 
@@ -376,7 +376,7 @@ function fireConfetti(count) {
         alive = true;
         continue;
       }
-      p.vy += 0.22;
+      p.vy = Math.min(p.vy + 0.18, 5.5); // terminal velocity keeps the fall floaty
       p.vx *= 0.99;
       p.x += p.vx;
       p.y += p.vy;
