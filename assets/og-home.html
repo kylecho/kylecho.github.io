@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; box-sizing: border-box; }
+  body {
+    width: 1200px;
+    height: 630px;
+    background: #070d1c;
+    background-image:
+      repeating-linear-gradient(90deg, rgba(124, 155, 255, 0.07) 0 1px, transparent 1px 72px),
+      repeating-linear-gradient(0deg, rgba(124, 155, 255, 0.07) 0 1px, transparent 1px 72px);
+    color: #f2f5fd;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    padding: 72px 84px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    position: relative;
+  }
+  .kicker {
+    font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+    font-size: 20px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(206, 220, 250, 0.58);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; background: #4d6bff; }
+  h1 {
+    font-size: 128px;
+    font-weight: 500;
+    letter-spacing: -0.068em;
+    line-height: 0.92;
+  }
+  .sub {
+    margin-top: 28px;
+    font-size: 30px;
+    letter-spacing: -0.015em;
+    color: rgba(226, 235, 255, 0.82);
+    max-width: 850px;
+    line-height: 1.4;
+  }
+  .meta {
+    font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+    font-size: 19px;
+    letter-spacing: 0.05em;
+    color: rgba(206, 220, 250, 0.58);
+    display: flex;
+    justify-content: space-between;
+  }
+  .mesh {
+    position: absolute;
+    left: 0; right: 0; bottom: -40px;
+    height: 240px;
+    opacity: 0.55;
+  }
+</style>
+</head>
+<body>
+  <div class="kicker"><span class="dot"></span>Software engineer · San Francisco</div>
+  <div>
+    <h1>Hi, I&rsquo;m Kyle.</h1>
+    <p class="sub">Platforms, real-time collaboration, and AI experiences — the systems underneath products.</p>
+  </div>
+  <div class="meta"><span>kylecho.com</span><span>37.7749° N / 122.4194° W</span></div>
+  <svg class="mesh" viewBox="0 0 1200 240" fill="none" preserveAspectRatio="none">
+    <g stroke="#5c86ff" stroke-width="1.4" opacity="0.9">
+      <path d="M0 190 Q 150 150 300 178 T 600 168 T 900 182 T 1200 160"/>
+      <path d="M0 210 Q 150 175 300 200 T 600 190 T 900 204 T 1200 185" opacity="0.7"/>
+      <path d="M0 168 Q 150 128 300 156 T 600 146 T 900 160 T 1200 138" opacity="0.5"/>
+      <path d="M0 230 Q 150 200 300 222 T 600 214 T 900 226 T 1200 208" opacity="0.4"/>
+    </g>
+    <g fill="#7c9bff">
+      <circle cx="180" cy="163" r="3.5"/><circle cx="430" cy="170" r="3.5"/>
+      <circle cx="700" cy="165" r="3.5"/><circle cx="980" cy="176" r="3.5"/>
+      <circle cx="90" cy="196" r="2.5"/><circle cx="560" cy="190" r="2.5"/>
+      <circle cx="840" cy="197" r="2.5"/><circle cx="1130" cy="182" r="2.5"/>
+    </g>
+  </svg>
+</body>
+</html>

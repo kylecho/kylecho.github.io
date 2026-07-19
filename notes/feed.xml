@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Kyle Cho — Notes</title>
+  <subtitle>Lessons from operating production systems.</subtitle>
+  <link href="https://kylecho.com/notes/feed.xml" rel="self"/>
+  <link href="https://kylecho.com/notes/"/>
+  <id>https://kylecho.com/notes/</id>
+  <updated>2026-07-18T00:00:00Z</updated>
+  <author><name>Kyle Cho</name></author>
+
+  <entry>
+    <title>await isn't free</title>
+    <link href="https://kylecho.com/notes/await-isnt-free/"/>
+    <id>https://kylecho.com/notes/await-isnt-free/</id>
+    <updated>2026-07-18T00:00:00Z</updated>
+    <summary>Awaiting cached DataLoader hits looks harmless in code review. Under load, the microtask hops, promise allocation, and graphql-js's async path add up.</summary>
+  </entry>
+</feed>

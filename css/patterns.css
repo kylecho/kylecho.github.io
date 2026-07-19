@@ -532,6 +532,27 @@ pre.code code {
   font-family: var(--mono);
 }
 
+/* ------------------------------------------------------------------- 404 */
+
+.not-found-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.not-found-body h1 {
+  margin-top: 0.85rem;
+}
+
+.not-found-body .drill-actions {
+  margin-top: 2.25rem;
+}
+
+.not-found-body .btn {
+  text-align: center;
+}
+
 /* ---------------------------------------------------------------- footer */
 
 .patterns-foot {

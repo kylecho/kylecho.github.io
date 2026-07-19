@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#070d1c">
+
+  <title>404 — Kyle Cho</title>
+
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (t !== "light" && t !== "dark") {
+          t = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        }
+        document.documentElement.dataset.theme = t;
+      } catch (e) {
+        document.documentElement.dataset.theme = "dark";
+      }
+    })();
+  </script>
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/patterns.css">
+</head>
+<body class="patterns-page">
+  <main class="patterns not-found" id="main">
+    <header class="patterns-top">
+      <a class="patterns-home" href="/">&larr; Kyle Cho</a>
+    </header>
+
+    <div class="not-found-body">
+      <p class="deck-meta">404 &middot; not found</p>
+      <h1>This page doesn&rsquo;t exist.</h1>
+      <p class="patterns-intro">
+        The address may have moved or never was. Everything that does
+        exist is one hop away.
+      </p>
+      <div class="drill-actions">
+        <a class="btn btn-primary" href="/">Home</a>
+        <a class="btn" href="/patterns/">Patterns</a>
+        <a class="btn" href="/notes/">Notes</a>
+      </div>
+    </div>
+
+    <footer class="patterns-foot">
+      <span>© <span data-year-full>2026</span> Kyle Cho</span>
+      <span>37.7749&deg; N / 122.4194&deg; W</span>
+    </footer>
+  </main>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

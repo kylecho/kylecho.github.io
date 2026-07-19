@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Awaiting cached DataLoader hits looks free in code review. Under load, the microtask hops, promise allocation, and graphql-js's async path add up.">
+  <meta name="theme-color" content="#070d1c">
+
+  <title>await isn&rsquo;t free — Kyle Cho</title>
+
+  <link rel="canonical" href="https://kylecho.com/notes/await-isnt-free/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Kyle Cho">
+  <meta property="og:title" content="await isn&rsquo;t free">
+  <meta property="og:description" content="A pattern that looks innocent in code review — awaiting cached DataLoader hits — and what it actually costs a Node.js service under sustained load.">
+  <meta property="og:url" content="https://kylecho.com/notes/await-isnt-free/">
+  <meta property="og:image" content="https://kylecho.com/assets/og-note-await.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="article:published_time" content="2026-07-18">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="await isn&rsquo;t free">
+  <meta name="twitter:description" content="What awaiting cached DataLoader hits actually costs a Node.js service under sustained load.">
+  <meta name="twitter:image" content="https://kylecho.com/assets/og-note-await.png">
+  <link rel="alternate" type="application/atom+xml" title="Kyle Cho — Notes" href="/notes/feed.xml">
+
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (t !== "light" && t !== "dark") {
+          t = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        }
+        document.documentElement.dataset.theme = t;
+      } catch (e) {
+        document.documentElement.dataset.theme = "dark";
+      }
+    })();
+  </script>
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/patterns.css">
+  <link rel="stylesheet" href="/css/notes.css">
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "await isn't free",
+      "datePublished": "2026-07-18",
+      "author": { "@type": "Person", "name": "Kyle Cho", "url": "https://kylecho.com" },
+      "url": "https://kylecho.com/notes/await-isnt-free/"
+    }
+  </script>
+</head>
+<body class="patterns-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <main class="notes" id="main">
+    <header class="patterns-top">
+      <a class="patterns-home" href="/notes/">&larr; Notes</a>
+
+      <button class="theme-toggle" type="button" aria-label="Switch to light mode">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none">
+          <mask id="theme-mask">
+            <rect width="24" height="24" fill="#fff"/>
+            <circle class="moon-bite" cx="17" cy="7" r="7" fill="#000"/>
+          </mask>
+          <circle class="sun-core" cx="12" cy="12" r="8" fill="currentColor" mask="url(#theme-mask)"/>
+          <g class="sun-rays" stroke="currentColor">
+            <line x1="12" y1="1.5" x2="12" y2="3.8"/>
+            <line x1="12" y1="20.2" x2="12" y2="22.5"/>
+            <line x1="1.5" y1="12" x2="3.8" y2="12"/>
+            <line x1="20.2" y1="12" x2="22.5" y2="12"/>
+            <line x1="4.6" y1="4.6" x2="6.2" y2="6.2"/>
+            <line x1="17.8" y1="17.8" x2="19.4" y2="19.4"/>
+            <line x1="4.6" y1="19.4" x2="6.2" y2="17.8"/>
+            <line x1="17.8" y1="6.2" x2="19.4" y2="4.6"/>
+          </g>
+        </svg>
+      </button>
+    </header>
+
+    <article class="note-article">
+      <p class="deck-meta">Notes &middot; July 2026 &middot; Node.js, GraphQL</p>
+      <h1>await isn&rsquo;t free.</h1>
+
+      <p>
+        In a high-throughput GraphQL service, a surprising amount of
+        event-loop time can go to a pattern that looks free in code review:
+        awaiting promises that resolve immediately from a DataLoader cache.
+      </p>
+
+      <h2>The symptom</h2>
+      <p>
+        Event-loop utilization climbs under load, tail latency follows, and
+        the flame graph shows nothing. Time is spread thinly across promise
+        plumbing and executor internals instead of any hot resolver.
+      </p>
+
+      <h2>The pattern</h2>
+      <p>
+        DataLoader caches per request: the first <code>load(id)</code> hits
+        the backend, every repeat resolves from memory. In a list-heavy
+        schema, hit rates are high. The resolver reads as if the cached case
+        were free:
+      </p>
+      <pre class="code"><code class="language-js">// Looks free when the loader has it cached. It isn't.
+const resolvers = {
+  Post: {
+    author: (post, _, { loaders }) =&gt; loaders.user.load(post.authorId),
+  },
+};</code></pre>
+
+      <h2>What an await costs</h2>
+      <p>
+        Awaiting an already-resolved promise still allocates a promise and
+        schedules the continuation on the microtask queue. V8 has optimized
+        this hard (Node 12 cut it from three ticks to one), but one tick
+        isn&rsquo;t zero. Measured: a million awaits of a resolved promise
+        take ~35ms; reading the value directly takes under 3ms.
+      </p>
+      <pre class="code"><code class="language-js">const N = 1_000_000;
+const cache = new Map([["k", 42]]);
+
+async function viaAwait() {
+  let sum = 0;
+  for (let i = 0; i &lt; N; i++) {
+    sum += await Promise.resolve(cache.get("k"));
+  }
+  return sum;
+}
+
+function viaSync() {
+  let sum = 0;
+  for (let i = 0; i &lt; N; i++) {
+    sum += cache.get("k");
+  }
+  return sum;
+}
+
+// node v24: viaAwait ~35ms, viaSync ~2.8ms — roughly 13x,
+// or ~35ns of scheduling overhead per cached await.</code></pre>
+      <p>
+        That benchmark is the floor. In a GraphQL executor two things compound
+        it. Promise allocation adds GC pressure. And <code>graphql-js</code>
+        has a synchronous fast path: a resolver returning a plain value
+        completes the field synchronously, while a returned promise forces
+        async completion for the field and every ancestor. At a few thousand
+        requests per second with a few hundred cached fields each, that is
+        hundreds of thousands of useless microtask hops per second, per
+        worker. None show up as a hot function; all show up as event-loop
+        utilization.
+      </p>
+
+      <h2>The fix</h2>
+      <p>
+        Two changes. First, don&rsquo;t mark resolvers <code>async</code>
+        unless they await something; <code>async (post) =&gt; post.title</code>
+        allocates a promise per call for nothing. Second, give cache hits a
+        synchronous path. DataLoader&rsquo;s cache stores promises, so
+        <code>load()</code> always returns one. A wrapper that memoizes
+        resolved values can return the plain value:
+      </p>
+      <pre class="code"><code class="language-js">// values: a per-request Map of id -&gt; resolved entity
+function loadSync(loader, values, id) {
+  if (values.has(id)) return values.get(id); // plain value — sync path
+  return loader.load(id).then((value) =&gt; {
+    values.set(id, value);
+    return value;
+  });
+}
+
+const resolvers = {
+  Post: {
+    author: (post, _, { loaders, userValues }) =&gt;
+      loadSync(loaders.user, userValues, post.authorId),
+  },
+};</code></pre>
+      <p>
+        Misses still batch through DataLoader. Hits skip the microtask queue
+        and keep the executor synchronous.
+      </p>
+
+      <h2>The tradeoff</h2>
+      <p>
+        It&rsquo;s uglier than the naive version, and at low traffic the naive
+        version is right: the overhead exists but doesn&rsquo;t matter. Apply
+        the wrapper only where measurement says the multiplier is large — the
+        few entity types that dominate traffic.
+      </p>
+
+      <h2>The principle</h2>
+      <p>
+        The cost of <code>await</code> depends on throughput. At ten requests
+        a second it rounds to free; at thousands it&rsquo;s a measurable
+        event-loop consumer. You can&rsquo;t tell which regime you&rsquo;re in
+        by reading code. Measure, then fix exactly what the measurement names.
+      </p>
+
+      <div class="drill-actions note-foot-nav">
+        <a class="btn" href="/notes/">&larr; All notes</a>
+        <a class="btn" href="/">Home</a>
+      </div>
+    </article>
+
+    <footer class="patterns-foot">
+      <span>© <span data-year-full>2026</span> Kyle Cho</span>
+      <span>37.7749&deg; N / 122.4194&deg; W</span>
+    </footer>
+  </main>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/vendor/prism.min.js"></script>
+</body>
+</html>
