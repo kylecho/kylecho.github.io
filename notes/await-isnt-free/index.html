@@ -95,16 +95,17 @@
       <h2>The symptom</h2>
       <p>
         Event-loop utilization climbs under load, tail latency follows, and
-        the flame graph shows nothing. Time is spread thinly across promise
-        plumbing and executor internals instead of any hot resolver.
+        no resolver dominates the flame graph. Time is spread thinly across
+        promise plumbing and executor internals instead.
       </p>
 
       <h2>The pattern</h2>
       <p>
-        DataLoader caches per request: the first <code>load(id)</code> hits
-        the backend, every repeat resolves from memory. In a list-heavy
-        schema, hit rates are high. The resolver reads as if the cached case
-        were free:
+        DataLoader batches and memoizes per-request lookups, so repeated
+        <code>load(id)</code> calls collapse into one backend fetch: the
+        first hits the backend, every repeat resolves from memory. In a
+        list-heavy schema, hit rates are high. The resolver reads as if the
+        cached case were free:
       </p>
       <pre class="code"><code class="language-js">// Looks free when the loader has it cached. It isn't.
 const resolvers = {
@@ -195,8 +196,10 @@ const resolvers = {
         It&rsquo;s uglier than the naive version, and at low traffic the naive
         version is right: the overhead exists but doesn&rsquo;t matter. The
         side map also doesn&rsquo;t see <code>loader.clear(id)</code>, so code
-        that clears loaders after mutations must clear both. Apply the
-        wrapper only where measurement says the multiplier is large — the
+        that clears loaders after mutations must clear both. The contract
+        changes too, from always-a-promise to value-or-promise, so callers
+        that assume the DataLoader shape need to know. Apply the wrapper
+        only where measurement says the multiplier is large — the
         few entity types that dominate traffic.
       </p>
 
