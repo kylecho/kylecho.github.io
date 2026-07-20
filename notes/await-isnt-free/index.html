@@ -87,9 +87,9 @@
       <h1>await isn&rsquo;t free.</h1>
 
       <p>
-        In a high-throughput GraphQL service, a surprising amount of
-        event-loop time can go to a pattern that looks free in code review:
-        awaiting promises that resolve immediately from a DataLoader cache.
+        In a high-throughput GraphQL service, event-loop time goes to a
+        pattern that looks free in code review: awaiting promises that
+        resolve immediately from a DataLoader cache.
       </p>
 
       <h2>The symptom</h2>
@@ -146,7 +146,7 @@ function viaSync() {
       <div class="loop-viz" id="loop-viz" aria-label="Event loop visualizer"></div>
       <p>
         Absolute numbers vary by engine — Node and each browser will give
-        you different constants. The asymmetry is what holds.
+        you different constants. The asymmetry holds everywhere.
       </p>
       <h2>Why it compounds</h2>
       <p>
@@ -203,9 +203,9 @@ const resolvers = {
       <h2>The principle</h2>
       <p>
         The cost of <code>await</code> depends on throughput. At ten requests
-        a second it rounds to free; at thousands it&rsquo;s a measurable
-        event-loop consumer. You can&rsquo;t tell which regime you&rsquo;re in
-        by reading code. Measure, then fix exactly what the measurement names.
+        a second it rounds to zero; at thousands it shows up on the graph.
+        You can&rsquo;t tell which regime you&rsquo;re in by reading code.
+        Measure, then fix what the profile points at.
       </p>
 
       <div class="drill-actions note-foot-nav">

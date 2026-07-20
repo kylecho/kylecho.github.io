@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Why remote cursors feel broken, and the ~100ms of deliberate delay that fixes them: send-rate discipline, entity interpolation, and a playground that runs your own cursor through a simulated network.">
+  <meta name="theme-color" content="#070d1c">
+
+  <title>smoothness is latency — Kyle Cho</title>
+
+  <link rel="canonical" href="https://kylecho.com/notes/smoothness-is-latency/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Kyle Cho">
+  <meta property="og:title" content="smoothness is latency">
+  <meta property="og:description" content="Why remote cursors feel broken, and the ~100ms of deliberate delay that fixes them. Try it with your own cursor.">
+  <meta property="og:url" content="https://kylecho.com/notes/smoothness-is-latency/">
+  <meta property="og:image" content="https://kylecho.com/assets/og-note-cursor.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="article:published_time" content="2026-07-19">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="smoothness is latency">
+  <meta name="twitter:description" content="Why remote cursors feel broken, and the ~100ms of deliberate delay that fixes them.">
+  <meta name="twitter:image" content="https://kylecho.com/assets/og-note-cursor.png">
+  <link rel="alternate" type="application/atom+xml" title="Kyle Cho — Notes" href="/notes/feed.xml">
+
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (t !== "light" && t !== "dark") {
+          t = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        }
+        document.documentElement.dataset.theme = t;
+      } catch (e) {
+        document.documentElement.dataset.theme = "dark";
+      }
+    })();
+  </script>
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/patterns.css">
+  <link rel="stylesheet" href="/css/notes.css">
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "smoothness is latency",
+      "datePublished": "2026-07-19",
+      "author": { "@type": "Person", "name": "Kyle Cho", "url": "https://kylecho.com" },
+      "url": "https://kylecho.com/notes/smoothness-is-latency/"
+    }
+  </script>
+</head>
+<body class="patterns-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <main class="notes" id="main">
+    <header class="patterns-top">
+      <a class="patterns-home" href="/notes/">&larr; Notes</a>
+
+      <button class="theme-toggle" type="button" aria-label="Switch to light mode">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none">
+          <mask id="theme-mask">
+            <rect width="24" height="24" fill="#fff"/>
+            <circle class="moon-bite" cx="17" cy="7" r="7" fill="#000"/>
+          </mask>
+          <circle class="sun-core" cx="12" cy="12" r="8" fill="currentColor" mask="url(#theme-mask)"/>
+          <g class="sun-rays" stroke="currentColor">
+            <line x1="12" y1="1.5" x2="12" y2="3.8"/>
+            <line x1="12" y1="20.2" x2="12" y2="22.5"/>
+            <line x1="1.5" y1="12" x2="3.8" y2="12"/>
+            <line x1="20.2" y1="12" x2="22.5" y2="12"/>
+            <line x1="4.6" y1="4.6" x2="6.2" y2="6.2"/>
+            <line x1="17.8" y1="17.8" x2="19.4" y2="19.4"/>
+            <line x1="4.6" y1="19.4" x2="6.2" y2="17.8"/>
+            <line x1="17.8" y1="6.2" x2="19.4" y2="4.6"/>
+          </g>
+        </svg>
+      </button>
+    </header>
+
+    <article class="note-article">
+      <p class="deck-meta">Notes &middot; July 2026 &middot; Real-time, networks</p>
+      <h1>smoothness is latency.</h1>
+
+      <p>
+        A remote cursor is the simplest real-time feature you can build: read
+        a position, send it, draw it. The naive version still feels broken.
+        The other cursor stutters and teleports, and more bandwidth
+        doesn&rsquo;t fix it. The fix is to render the past on purpose.
+      </p>
+
+      <h2>The naive version</h2>
+      <p>
+        Send every <code>pointermove</code>, draw every arrival. Both halves
+        are wrong.
+      </p>
+      <p>
+        On the send side, <code>pointermove</code> fires at display refresh
+        rate: 60 to 120 events a second from one hand. Everyone receives
+        everyone else&rsquo;s stream, so a room of ten is fanning out
+        thousands of messages a second whose content is mostly &ldquo;the
+        cursor moved half a pixel.&rdquo;
+      </p>
+      <p>
+        On the receive side, the network delivers those messages late,
+        unevenly spaced, and sometimes out of order. A cursor drawn at
+        arrival time replays that noise as motion.
+      </p>
+
+      <h2>The send side</h2>
+      <p>
+        Throttle on a clock and coalesce: every 50ms, send the latest
+        position and discard the backlog. Sequence-number each message so a
+        late arrival can&rsquo;t overwrite a newer one; last write wins.
+        Twenty messages a second sounds coarse; smoothed on the receiving
+        end, it&rsquo;s indistinguishable from a hundred at a fifth of the
+        fan-out.
+      </p>
+
+      <h2>The receive side</h2>
+      <p>
+        Arrival times can&rsquo;t be repaired, so stop rendering at arrival
+        time. The standard technique, borrowed from game netcode, is entity
+        interpolation: buffer incoming snapshots and render the cursor at a
+        fixed offset in the past, around 100ms, interpolating between the two
+        snapshots that bracket that moment. Jitter disappears into the
+        buffer, and the motion is interpolated between real samples:
+        continuous by construction.
+      </p>
+
+      <h2>Feel it</h2>
+      <p>
+        The panel below runs your own cursor through a simulated network —
+        the sliders are the network, the toggles are the fixes. Nothing is
+        staged: messages really are delayed, jittered, and dropped when
+        stale, and the counters are measured live.
+      </p>
+
+      <div class="loop-viz cursor-viz" id="cursor-viz" aria-label="Cursor sync demo"></div>
+
+      <h2>The tradeoff</h2>
+      <p>
+        Interpolation is bought with delay: the remote cursor runs about
+        100ms behind the hand that moves it. The trade is worth it — a
+        steady 100ms reads as presence, a jittery 40ms reads as broken.
+        Size the buffer from your jitter distribution; a buffer smaller
+        than the spikes just moves the stutter around.
+      </p>
+
+      <h2>The principle</h2>
+      <p>
+        The newest data makes the worst motion. Real-time rendering is a
+        scheduling problem: commit to a render time the network can always
+        meet, then hold it.
+      </p>
+
+      <div class="drill-actions note-foot-nav">
+        <a class="btn" href="/notes/">&larr; All notes</a>
+        <a class="btn" href="/">Home</a>
+      </div>
+    </article>
+
+    <footer class="patterns-foot">
+      <span>© <span data-year-full>2026</span> Kyle Cho</span>
+      <span>37.7749&deg; N / 122.4194&deg; W</span>
+    </footer>
+  </main>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/cursor-viz.js" defer></script>
+</body>
+</html>

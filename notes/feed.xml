@@ -5,8 +5,16 @@
   <link href="https://kylecho.com/notes/feed.xml" rel="self"/>
   <link href="https://kylecho.com/notes/"/>
   <id>https://kylecho.com/notes/</id>
-  <updated>2026-07-18T00:00:00Z</updated>
+  <updated>2026-07-19T00:00:00Z</updated>
   <author><name>Kyle Cho</name></author>
+
+  <entry>
+    <title>smoothness is latency</title>
+    <link href="https://kylecho.com/notes/smoothness-is-latency/"/>
+    <id>https://kylecho.com/notes/smoothness-is-latency/</id>
+    <updated>2026-07-19T00:00:00Z</updated>
+    <summary>Why remote cursors feel broken, and the ~100ms of deliberate delay that fixes them: send-rate discipline, entity interpolation, and a playground that runs your own cursor through a simulated network.</summary>
+  </entry>
 
   <entry>
     <title>await isn't free</title>

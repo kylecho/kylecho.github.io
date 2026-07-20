@@ -262,3 +262,80 @@
     animation: none;
   }
 }
+
+/* --------------------------------------------------- cursor-sync playground */
+
+.cviz-stage {
+  position: relative;
+  height: 260px;
+  margin-top: 1rem;
+  overflow: hidden;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  touch-action: none;
+}
+
+.cviz-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  color: var(--text-mute);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  transform: translate(-50%, -50%);
+}
+
+.cviz-you {
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-mute);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.cviz-remote {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: var(--accent);
+  filter: drop-shadow(0 1px 4px rgba(3, 8, 20, 0.4));
+  pointer-events: none;
+}
+
+/* SVG doesn't get the UA's [hidden] treatment reliably; enforce it */
+.cviz-remote[hidden] {
+  display: none;
+}
+
+.cviz-sliders {
+  display: flex;
+  margin-top: 1rem;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.cviz-sliders label {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  color: var(--text-mute);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.cviz-sliders input[type="range"] {
+  width: clamp(110px, 18vw, 180px);
+  accent-color: var(--accent);
+}
+
+.cviz-sliders span {
+  min-width: 4ch;
+  color: var(--text-soft);
+}
