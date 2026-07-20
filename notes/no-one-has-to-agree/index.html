@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="How CRDTs let two people edit the same document with no server deciding the order: why naive position-based merging breaks, what operational transform and CRDTs each do about it, and a live two-replica demo you can type into.">
+  <meta name="theme-color" content="#070d1c">
+
+  <title>no one has to agree — Kyle Cho</title>
+
+  <link rel="canonical" href="https://kylecho.com/notes/no-one-has-to-agree/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Kyle Cho">
+  <meta property="og:title" content="no one has to agree">
+  <meta property="og:description" content="How two people can edit the same document with no server deciding the order. Operational transform, CRDTs, and a live two-replica demo you can type into.">
+  <meta property="og:url" content="https://kylecho.com/notes/no-one-has-to-agree/">
+  <meta property="og:image" content="https://kylecho.com/assets/og-note-crdt.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="article:published_time" content="2026-07-20">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="no one has to agree">
+  <meta name="twitter:description" content="How two people can edit the same document with no server deciding the order. Operational transform, CRDTs, and a live two-replica demo.">
+  <meta name="twitter:image" content="https://kylecho.com/assets/og-note-crdt.png">
+  <link rel="alternate" type="application/atom+xml" title="Kyle Cho — Notes" href="/notes/feed.xml">
+
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (t !== "light" && t !== "dark") {
+          t = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        }
+        document.documentElement.dataset.theme = t;
+      } catch (e) {
+        document.documentElement.dataset.theme = "dark";
+      }
+    })();
+  </script>
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/patterns.css">
+  <link rel="stylesheet" href="/css/notes.css">
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "no one has to agree",
+      "datePublished": "2026-07-20",
+      "author": { "@type": "Person", "name": "Kyle Cho", "url": "https://kylecho.com" },
+      "url": "https://kylecho.com/notes/no-one-has-to-agree/"
+    }
+  </script>
+</head>
+<body class="patterns-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <main class="notes" id="main">
+    <header class="patterns-top">
+      <a class="patterns-home" href="/notes/">&larr; Notes</a>
+
+      <button class="theme-toggle" type="button" aria-label="Switch to light mode">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none">
+          <mask id="theme-mask">
+            <rect width="24" height="24" fill="#fff"/>
+            <circle class="moon-bite" cx="17" cy="7" r="7" fill="#000"/>
+          </mask>
+          <circle class="sun-core" cx="12" cy="12" r="8" fill="currentColor" mask="url(#theme-mask)"/>
+          <g class="sun-rays" stroke="currentColor">
+            <line x1="12" y1="1.5" x2="12" y2="3.8"/>
+            <line x1="12" y1="20.2" x2="12" y2="22.5"/>
+            <line x1="1.5" y1="12" x2="3.8" y2="12"/>
+            <line x1="20.2" y1="12" x2="22.5" y2="12"/>
+            <line x1="4.6" y1="4.6" x2="6.2" y2="6.2"/>
+            <line x1="17.8" y1="17.8" x2="19.4" y2="19.4"/>
+            <line x1="4.6" y1="19.4" x2="6.2" y2="17.8"/>
+            <line x1="17.8" y1="6.2" x2="19.4" y2="4.6"/>
+          </g>
+        </svg>
+      </button>
+    </header>
+
+    <article class="note-article">
+      <p class="deck-meta">Notes &middot; July 2026 &middot; Real-time, data structures</p>
+      <h1>no one has to agree.</h1>
+
+      <p>
+        Two people type in the same document at once. Every keystroke has to
+        land, and both people have to end up looking at the same text,
+        without a lock and without silently dropping an edit. That sounds
+        simple. The naive version breaks immediately.
+      </p>
+
+      <h2>The naive merge</h2>
+      <p>
+        Represent each edit as an operation: insert a character at position
+        5. Two people, editing concurrently, each compute that position
+        against the same starting text. Apply both operations in arrival
+        order with no adjustment, and the second one lands wrong. An edit
+        arrived in between, and every index after it shifted. The result
+        isn&rsquo;t a merge. It&rsquo;s corruption that happens to look like
+        text.
+      </p>
+      <p>
+        Fixing this without a central lock is the actual problem. Two
+        answers exist, and they solve it in opposite ways.
+      </p>
+
+      <h2>Operational transform</h2>
+      <p>
+        OT keeps positions and fixes the math. Before applying an operation
+        from another replica — another person&rsquo;s copy of the document —
+        transform it against every operation it didn&rsquo;t see: if a
+        concurrent insert landed earlier in the text,
+        shift this operation&rsquo;s position past it. Get the transform
+        function right for every pair of operation types, and every replica
+        ends up with the same document regardless of arrival order.
+      </p>
+      <p>
+        Getting it right is the hard part, and it gets harder as the
+        document gets richer. Plain-text insert-against-insert is
+        manageable. Insert against delete, delete against delete, and then
+        formatting, embedded objects, and nested structure each add their
+        own cases the transform function has to handle correctly, forever.
+        And &ldquo;every operation it didn&rsquo;t see&rdquo; needs a
+        definition — in practice, a central server that sequences every
+        edit so everyone transforms against the same order.
+      </p>
+
+      <h2>CRDTs</h2>
+      <p>
+        CRDTs skip the transform function by skipping positions-as-indices
+        entirely. Instead of &ldquo;insert at index 5,&rdquo; every
+        character gets a permanent position value when it&rsquo;s typed,
+        chosen to sit strictly between its left and right neighbors. Insert
+        a new character between two existing ones, and there&rsquo;s always
+        room to place it, without renumbering anything else.
+      </p>
+      <p>
+        That&rsquo;s what makes the operations commutative: compare two
+        characters&rsquo; positions and you get the same answer no matter
+        what order either replica received them in. No transform function,
+        no server to sequence anything — any two replicas that have seen the
+        same set of operations converge on the same document, in any order,
+        even fully out of order.
+      </p>
+
+      <h2>Feel it</h2>
+      <p>
+        The two panes below are independent replicas, not a shared textbox.
+        Each keystroke becomes a real operation, sent to the other pane
+        with a short random delay. Type in one, then the other: they
+        converge once the delay clears. Type in both at the same spot at
+        once, and watch them comb together instead — still convergent, just
+        not always legible. That&rsquo;s a real property of this scheme, not
+        a bug in the demo.
+      </p>
+
+      <div class="loop-viz crdt-viz" id="crdt-viz" aria-label="CRDT merge demo"></div>
+
+      <h2>The tradeoff</h2>
+      <p>
+        Convergence without coordination is paid for twice. Deleted
+        characters can&rsquo;t just disappear — if a delete arrives before
+        the replica has seen the matching insert, there&rsquo;d be nothing
+        to mark, so deleted characters stick around as tombstones, and a
+        long-lived document accumulates them forever unless something later
+        compacts the history. And a scheme that only compares positions,
+        with no memory of which characters arrived together, can interleave
+        two people&rsquo;s concurrent edits at the same spot, the way the
+        demo just did — convergent, but not always readable. Production
+        libraries like Yjs and Automerge track more of each operation&rsquo;s
+        context specifically to avoid that; this demo doesn&rsquo;t, so you
+        can watch it happen instead.
+      </p>
+      <p>
+        In practice, the choice often comes down to what else is already in
+        the path. If nothing else needs a central server, CRDTs avoid adding
+        one just for sequencing. If a server&rsquo;s already there for auth
+        or persistence, OT&rsquo;s transform cost can be cheaper than moving
+        coordination out to the clients entirely.
+      </p>
+
+      <h2>The principle</h2>
+      <p>
+        Coordination has to be paid for somewhere. OT pays with a server and
+        a transform function that only gets harder as the document does.
+        CRDTs pay with metadata that never shrinks, and sometimes with
+        legibility during the merge itself. Neither one avoids the cost —
+        they just move it to a different part of the system.
+      </p>
+
+      <div class="drill-actions note-foot-nav">
+        <a class="btn" href="/notes/">&larr; All notes</a>
+        <a class="btn" href="/">Home</a>
+      </div>
+    </article>
+
+    <footer class="patterns-foot">
+      <span>© <span data-year-full>2026</span> Kyle Cho</span>
+      <span>37.7749&deg; N / 122.4194&deg; W</span>
+    </footer>
+  </main>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/crdt-viz.js" defer></script>
+</body>
+</html>

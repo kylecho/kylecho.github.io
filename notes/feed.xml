@@ -5,8 +5,16 @@
   <link href="https://kylecho.com/notes/feed.xml" rel="self"/>
   <link href="https://kylecho.com/notes/"/>
   <id>https://kylecho.com/notes/</id>
-  <updated>2026-07-19T00:00:00Z</updated>
+  <updated>2026-07-20T00:00:00Z</updated>
   <author><name>Kyle Cho</name></author>
+
+  <entry>
+    <title>no one has to agree</title>
+    <link href="https://kylecho.com/notes/no-one-has-to-agree/"/>
+    <id>https://kylecho.com/notes/no-one-has-to-agree/</id>
+    <updated>2026-07-20T00:00:00Z</updated>
+    <summary>How two people can edit the same document with no server deciding the order: why naive position-based merging breaks, what operational transform and CRDTs each do about it, and a live two-replica demo you can type into.</summary>
+  </entry>
 
   <entry>
     <title>smoothness is latency</title>

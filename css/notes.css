@@ -351,3 +351,41 @@
   min-width: 4ch;
   color: var(--text-soft);
 }
+
+/* --------------------------------------------------------- CRDT playground */
+
+.crdt-panes {
+  display: grid;
+  margin-top: 1rem;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.crdt-pane .deck-meta {
+  margin-bottom: 0.5rem;
+}
+
+.crdt-text {
+  width: 100%;
+  height: 130px;
+  padding: 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg) 93%, var(--mesh-dot));
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  resize: none;
+}
+
+.crdt-text:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 620px) {
+  .crdt-panes {
+    grid-template-columns: 1fr;
+  }
+}
