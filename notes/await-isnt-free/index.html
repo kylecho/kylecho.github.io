@@ -152,7 +152,7 @@ function viaSync() {
       <h2>Why it compounds</h2>
       <p>
         That benchmark is the floor. In a GraphQL executor two things compound
-        it. Promise allocation adds GC pressure. And <code>graphql-js</code>
+        it. Promise allocation adds garbage-collector pressure. And <code>graphql-js</code>
         has a synchronous fast path: a resolver returning a plain value
         completes the field synchronously, while a returned promise forces
         async completion for the field and every ancestor. A process serving

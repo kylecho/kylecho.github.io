@@ -124,7 +124,7 @@
       <h2>The receive side</h2>
       <p>
         Arrival times can&rsquo;t be repaired, so stop rendering at arrival
-        time. The standard technique, borrowed from game netcode, is entity
+        time. The fix, borrowed from multiplayer games, is entity
         interpolation: buffer incoming snapshots and render the cursor at a
         fixed offset in the past, around 100ms, interpolating between the two
         snapshots that bracket that moment. Jitter disappears into the
