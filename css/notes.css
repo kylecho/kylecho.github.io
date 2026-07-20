@@ -95,6 +95,18 @@
   margin-top: 1.25rem;
 }
 
+/* Essay code and panels get solid, theme-derived surfaces: unlike the
+   drills page there's no glass card behind them, so translucent tints
+   let the grid texture bleed through the code */
+.note-article pre.code,
+.loop-viz .viz-code {
+  background: color-mix(in srgb, var(--bg) 93%, var(--mesh-dot));
+}
+
+.loop-viz {
+  background: color-mix(in srgb, var(--bg) 97%, var(--mesh-dot));
+}
+
 .note-article pre.code code {
   padding: 0;
   background: none;
