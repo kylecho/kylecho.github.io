@@ -163,6 +163,12 @@
   gap: 0.4rem;
   justify-content: flex-end;
   align-items: flex-start;
+  transition: border-color 250ms ease;
+}
+
+.viz-lane.is-hot .viz-slots {
+  border-color: var(--accent);
+  border-style: solid;
 }
 
 .viz-slots[data-lane="queue"] {

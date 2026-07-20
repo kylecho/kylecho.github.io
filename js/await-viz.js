@@ -45,6 +45,7 @@
   let iterations = 0;
   let hops = 0;
   let playTimer = null;
+  let started = false;
 
   host.innerHTML = `
     <p class="deck-meta">Watch the runtime run it</p>
@@ -103,10 +104,24 @@
       .map((l, i) => `<span class="viz-line${i === phase.line ? " is-current" : ""}">${l.replace(/</g, "&lt;")}</span>`)
       .join("");
 
-    renderLane(stackEl, phase.stack, "(idle — event loop)");
-    renderLane(queueEl, phase.queue, "(empty)");
+    renderLane(stackEl, phase.stack, "idle — the event loop takes over");
+    renderLane(queueEl, phase.queue, "empty — suspended work waits here");
 
-    statusEl.textContent = phase.desc;
+    if (!started) {
+      statusEl.textContent =
+        "Press Step to run one loop iteration and watch where the work goes.";
+      countersEl.textContent = "";
+      return;
+    }
+
+    let desc = `${phaseIdx + 1}/${def.phases.length} · ${phase.desc}`;
+    if (phase.iter && iterations === 1) {
+      desc +=
+        mode === "await"
+          ? " Now switch to the sync version — the queue never moves."
+          : " No queue involved. That's the whole difference.";
+    }
+    statusEl.textContent = desc;
 
     const nsPerHop = measured
       ? Math.round((measured.awaitMs * 1e6) / N_BENCH)
@@ -122,19 +137,33 @@
       ` · ${totals}`;
   }
 
+  let hotTimer = null;
+
   function step() {
     const phases = MODES[mode].phases;
-    phaseIdx = (phaseIdx + 1) % phases.length;
+    if (started) {
+      phaseIdx = (phaseIdx + 1) % phases.length;
+    }
+    started = true;
     const phase = phases[phaseIdx];
     if (phase.hop) hops += 1;
     if (phase.iter) iterations += 1;
     render();
+
+    // Point the eye at the queue when the hop happens
+    if (phase.hop) {
+      const lane = queueEl.closest(".viz-lane");
+      lane.classList.add("is-hot");
+      clearTimeout(hotTimer);
+      hotTimer = setTimeout(() => lane.classList.remove("is-hot"), 600);
+    }
   }
 
   function reset() {
     phaseIdx = 0;
     iterations = 0;
     hops = 0;
+    started = false;
     stopPlay();
     render();
   }
