@@ -46,6 +46,10 @@
       .join("");
   }
 
+  function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
   // Detects a single contiguous edit between two strings: common prefix +
   // common suffix, the middle is what changed. Covers typing, backspace,
   // and paste-over-a-selection; doesn't need to be more general than that
@@ -64,11 +68,12 @@
 
   // ---- per-pane state ----------------------------------------------------
 
-  function makePane(replicaId, textareaEl, tombstoneEl) {
+  function makePane(replicaId, textareaEl, tombstoneEl, chipsEl) {
     return {
       replicaId,
       el: textareaEl,
       tombstoneEl,
+      chipsEl,
       doc: [],
       counter: 0,
       lastRendered: "",
@@ -105,6 +110,24 @@
     return pane.doc.length - visible(pane.doc).length;
   }
 
+  // The actual doc array, in position order, tombstones included — this is
+  // what the essay describes (permanent positions, deleted-but-present
+  // characters) made visible instead of just narrated.
+  function renderChips(pane) {
+    if (!pane.doc.length) {
+      pane.chipsEl.innerHTML = '<span class="viz-empty">empty — no characters yet</span>';
+      return;
+    }
+    pane.chipsEl.innerHTML = pane.doc
+      .map((e) => {
+        const cls = e.deleted ? "crdt-chip is-deleted" : "crdt-chip";
+        const label = e.char === " " ? "&nbsp;" : escapeHtml(e.char);
+        const title = `pos ${e.pos.toFixed(4)} · id [${e.id[0]}, ${e.id[1]}]${e.deleted ? " · tombstone" : ""}`;
+        return `<span class="${cls}" title="${title}">${label}</span>`;
+      })
+      .join("");
+  }
+
   function renderPane(pane) {
     const str = renderString(pane.doc);
     if (pane.el.value !== str) {
@@ -118,6 +141,7 @@
     }
     pane.lastRendered = str;
     pane.tombstoneEl.textContent = String(tombstoneCount(pane));
+    renderChips(pane);
   }
 
   // ---- propagation -------------------------------------------------------
@@ -185,30 +209,40 @@
 
   // ---- markup --------------------------------------------------------------
 
+  const INITIAL_STATUS = "Type in one, then the other. They converge once the delay clears.";
+
   host.innerHTML = `
     <p class="deck-meta">Feel it &mdash; two replicas, no server between them</p>
     <div class="crdt-panes">
       <div class="crdt-pane">
         <p class="deck-meta">Replica A &middot; <span data-tombstones-a>0</span> tombstones</p>
         <textarea class="crdt-text" data-pane="a" spellcheck="false" aria-label="Replica A"></textarea>
+        <div class="crdt-chips" data-chips="a" aria-label="Replica A internal representation"></div>
       </div>
       <div class="crdt-pane">
         <p class="deck-meta">Replica B &middot; <span data-tombstones-b>0</span> tombstones</p>
         <textarea class="crdt-text" data-pane="b" spellcheck="false" aria-label="Replica B"></textarea>
+        <div class="crdt-chips" data-chips="b" aria-label="Replica B internal representation"></div>
       </div>
     </div>
-    <p class="viz-status" role="status">Type in one, then the other. They converge once the delay clears.</p>
-    <p class="viz-counters"></p>`;
+    <p class="viz-status" role="status">${INITIAL_STATUS}</p>
+    <p class="viz-counters"></p>
+    <div class="crdt-controls">
+      <button class="btn" type="button" data-reset>Reset</button>
+    </div>`;
 
   const elA = host.querySelector('[data-pane="a"]');
   const elB = host.querySelector('[data-pane="b"]');
   const tombA = host.querySelector("[data-tombstones-a]");
   const tombB = host.querySelector("[data-tombstones-b]");
+  const chipsA = host.querySelector('[data-chips="a"]');
+  const chipsB = host.querySelector('[data-chips="b"]');
   const statusEl = host.querySelector(".viz-status");
   const countersEl = host.querySelector(".viz-counters");
+  const resetBtn = host.querySelector("[data-reset]");
 
-  const paneA = makePane("A", elA, tombA);
-  const paneB = makePane("B", elB, tombB);
+  const paneA = makePane("A", elA, tombA, chipsA);
+  const paneB = makePane("B", elB, tombB, chipsB);
   panes = [paneA, paneB];
 
   let typedInA = false;
@@ -232,6 +266,25 @@
     handleLocalEdit(paneB, paneA);
     typedInB = true;
     maybeNudge();
+  });
+
+  function resetPane(pane) {
+    pane.doc = [];
+    pane.counter = 0;
+    pane.lastRendered = "";
+    pane.cursorAnchorId = null;
+  }
+
+  resetBtn.addEventListener("click", () => {
+    resetPane(paneA);
+    resetPane(paneB);
+    pending.length = 0;
+    typedInA = false;
+    typedInB = false;
+    nudged = false;
+    statusEl.textContent = INITIAL_STATUS;
+    renderPane(paneA);
+    renderPane(paneB);
   });
 
   function tick() {

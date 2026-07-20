@@ -384,6 +384,46 @@
   outline-offset: 2px;
 }
 
+/* Live internal representation: every element in the doc array, in
+   position order, including tombstones — this is what the prose
+   describes, made visible rather than just narrated */
+.crdt-chips {
+  display: flex;
+  overflow-y: auto;
+  max-height: 96px;
+  padding: 0.5rem;
+  margin-top: 0.6rem;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  align-content: flex-start;
+}
+
+.crdt-chip {
+  padding: 0.2rem 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  border-radius: 4px;
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+
+.crdt-chip.is-deleted {
+  border-color: var(--line);
+  color: var(--text-mute);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--text-mute) 70%, transparent);
+  opacity: 0.6;
+}
+
+.crdt-controls {
+  display: flex;
+  margin-top: 1rem;
+  gap: 0.6rem;
+}
+
 @media (max-width: 620px) {
   .crdt-panes {
     grid-template-columns: 1fr;
