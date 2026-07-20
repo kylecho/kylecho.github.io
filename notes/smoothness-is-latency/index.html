@@ -145,17 +145,18 @@
       <h2>The tradeoff</h2>
       <p>
         Interpolation is bought with delay: the remote cursor runs about
-        100ms behind the hand that moves it. The trade is worth it — a
-        steady 100ms reads as presence, a jittery 40ms reads as broken.
-        Size the buffer from your jitter distribution; a buffer smaller
-        than the spikes just moves the stutter around.
+        100ms behind the hand that moves it. In my experience the trade is
+        worth it — a steady 100ms reads as presence, a jittery cursor reads
+        as broken, even at a lower average delay. Size the buffer from your
+        jitter distribution; a buffer smaller than the spikes just moves the
+        stutter around.
       </p>
 
       <h2>The principle</h2>
       <p>
         The newest data makes the worst motion. Real-time rendering is a
-        scheduling problem: commit to a render time the network can always
-        meet, then hold it.
+        scheduling problem: commit to a render time the network can
+        reliably meet, then hold it.
       </p>
 
       <div class="drill-actions note-foot-nav">
