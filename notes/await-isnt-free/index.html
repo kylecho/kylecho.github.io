@@ -142,6 +142,12 @@ function viaSync() {
 
 // node v24: viaAwait ~35ms, viaSync ~2.8ms — roughly 13x,
 // or ~35ns of scheduling overhead per cached await.</code></pre>
+
+      <div class="loop-viz" id="loop-viz" aria-label="Event loop visualizer"></div>
+      <p>
+        Absolute numbers vary by engine — Node and each browser will give
+        you different constants. The asymmetry is what holds.
+      </p>
       <p>
         That benchmark is the floor. In a GraphQL executor two things compound
         it. Promise allocation adds GC pressure. And <code>graphql-js</code>
@@ -215,5 +221,6 @@ const resolvers = {
 
   <script src="/js/main.js"></script>
   <script src="/js/vendor/prism.min.js"></script>
+  <script src="/js/await-viz.js" defer></script>
 </body>
 </html>
