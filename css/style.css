@@ -379,13 +379,36 @@ html.has-3d-scene .terrain-scene canvas {
   letter-spacing: -0.04em;
 }
 
-.hero-actions a span {
+.hero-actions a .hero-action-arrow {
   color: var(--accent);
   transition: transform 180ms ease;
 }
 
-.hero-actions a:hover span {
+.hero-actions a:hover .hero-action-arrow {
   transform: translate(3px, -3px);
+}
+
+/* Patterns/Notes carry a quiet second line so they read as substantial
+   content, not just another exit link next to email/LinkedIn */
+.hero-actions a.hero-action-rich {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.hero-action-main {
+  display: inline-flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.hero-action-tag {
+  color: var(--text-mute);
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 /* ------------------------------------------------------------- meta line */
