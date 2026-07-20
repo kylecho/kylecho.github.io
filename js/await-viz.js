@@ -114,14 +114,15 @@
       return;
     }
 
-    let desc = `${phaseIdx + 1}/${def.phases.length} · ${phase.desc}`;
+    let desc = phase.desc;
     if (phase.iter && iterations === 1) {
       desc +=
         mode === "await"
           ? " Now switch to the sync version — the queue never moves."
           : " No queue involved. That's the whole difference.";
     }
-    statusEl.textContent = desc;
+    statusEl.innerHTML =
+      `<span class="viz-phase">step ${phaseIdx + 1}/${def.phases.length}</span>` + desc;
 
     const nsPerHop = measured
       ? Math.round((measured.awaitMs * 1e6) / N_BENCH)

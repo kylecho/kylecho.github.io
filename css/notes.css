@@ -209,6 +209,21 @@
   line-height: 1.5;
 }
 
+/* Phase badge in the status line, matching the drill-type pill language */
+.viz-phase {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  margin-right: 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  border-radius: 999px;
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  vertical-align: 0.12em;
+}
+
 .viz-counters {
   margin-top: 0.35rem;
   color: var(--text-mute);
