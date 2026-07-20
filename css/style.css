@@ -552,16 +552,33 @@ html.custom-cursor * {
 }
 
 .cursor-ring.is-active {
-  width: 54px;
-  height: 54px;
-  margin: -27px 0 0 -27px;
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
   border-color: color-mix(in srgb, var(--accent) 90%, transparent);
   background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
-html.cursor-hidden .cursor-dot,
-html.cursor-hidden .cursor-ring {
+/* One clear shape over clickable targets instead of two overlapping
+   circles: the dot steps back while the ring is doing the talking */
+body:has(.cursor-ring.is-active) .cursor-dot {
   opacity: 0;
+}
+
+html.cursor-hidden .cursor-dot,
+html.cursor-hidden .cursor-ring,
+html.cursor-text-target .cursor-dot,
+html.cursor-text-target .cursor-ring {
+  opacity: 0;
+}
+
+/* Text fields get the real thing — a circle can't say "click to type"
+   the way an I-beam does */
+html.custom-cursor textarea,
+html.custom-cursor input[type="text"],
+html.custom-cursor input[type="email"],
+html.custom-cursor input[type="search"] {
+  cursor: text !important;
 }
 
 /* ----------------------------------------------------------- responsive */

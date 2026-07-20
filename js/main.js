@@ -142,8 +142,18 @@
       (event) => {
         targetX = event.clientX;
         targetY = event.clientY;
-        document.documentElement.classList.remove("cursor-hidden");
-        ring.classList.toggle("is-active", !!event.target.closest("a, button"));
+        const root = document.documentElement;
+        root.classList.remove("cursor-hidden");
+
+        ring.classList.toggle("is-active", !!event.target.closest("a, button, input[type=range]"));
+
+        // Let the native text cursor show through on real text fields —
+        // a circle can't communicate "click to type" the way an I-beam
+        // does, so the custom cursor steps aside instead of competing.
+        root.classList.toggle(
+          "cursor-text-target",
+          !!event.target.closest("textarea, input[type=text], input[type=email], input[type=search]")
+        );
       },
       { passive: true }
     );
