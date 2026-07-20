@@ -30,6 +30,7 @@
         var t = localStorage.getItem("theme");
         if (t !== "light" && t !== "dark") {
           t = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+          localStorage.setItem("theme", t);
         }
         document.documentElement.dataset.theme = t;
       } catch (e) {
