@@ -150,6 +150,7 @@
   }
 
   let running = false;
+  let stopTimer = null;
 
   function frame() {
     const now = performance.now();
@@ -172,6 +173,10 @@
   }
 
   stage.addEventListener("pointerenter", () => {
+    // Cancel any pending stop from a previous leave — otherwise it fires
+    // later and kills this (still-active) run
+    clearTimeout(stopTimer);
+    stopTimer = null;
     if (!running) {
       running = true;
       requestAnimationFrame(frame);
@@ -179,9 +184,12 @@
   });
 
   stage.addEventListener("pointerleave", () => {
-    // Let in-flight messages land, then idle
-    setTimeout(() => {
+    // Let in-flight messages land, then idle — unless the pointer comes
+    // back first, in which case pointerenter cancels this
+    clearTimeout(stopTimer);
+    stopTimer = setTimeout(() => {
       running = false;
+      stopTimer = null;
     }, 1200);
   });
 
