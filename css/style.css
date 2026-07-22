@@ -193,7 +193,11 @@ html.has-3d-scene .terrain-scene canvas {
 .hero-kicker {
   display: flex;
   gap: 0.65rem;
-  align-items: center;
+  /* flex-start, not center: the toggle can wrap to multiple lines on
+     narrow screens, and center would center the dot against the
+     whole wrapped block instead of the first line. margin-top on the
+     dot itself does the fine centering against that first line only. */
+  align-items: flex-start;
   color: var(--text-soft);
   font-size: 0.7rem;
   font-weight: 700;
@@ -206,6 +210,7 @@ html.has-3d-scene .terrain-scene canvas {
   flex: none;
   width: 0.55rem;
   height: 0.55rem;
+  margin-top: 0.42em;
   border-radius: 50%;
   background: var(--accent);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent);
@@ -247,6 +252,18 @@ html.has-3d-scene .terrain-scene canvas {
   letter-spacing: inherit;
   text-transform: inherit;
   cursor: pointer;
+}
+
+.hero-kicker-base,
+.hero-kicker-detail,
+.hero-kicker-more {
+  /* An inline-block with non-visible overflow uses its bottom margin
+     edge as its baseline instead of its text's actual baseline (CSS
+     spec quirk), so .hero-kicker-detail's revealed text sat higher
+     than its plain-text siblings. Align all three the same way
+     (bottom, not baseline) so none of them invoke that per-element
+     baseline computation, and they land on the same line regardless. */
+  vertical-align: bottom;
 }
 
 .hero-kicker-detail {
