@@ -282,7 +282,7 @@
   const toggle = document.querySelector(".hero-kicker-toggle");
   if (!toggle) return;
 
-  const details = [...toggle.querySelectorAll(".hero-kicker-detail")];
+  const details = [...toggle.querySelectorAll(".hero-kicker-detail, .hero-kicker-sep")];
   let level = 0;
 
   const render = () => {

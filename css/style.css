@@ -214,22 +214,64 @@ html.has-3d-scene .terrain-scene canvas {
   border-radius: 50%;
   background: var(--accent);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent);
-  animation: status-breathe 3.2s ease-in-out infinite;
+  animation: status-breathe 2.8s infinite;
 }
 
-/* Radar ping: a thin ring drifts outward and dissolves */
+/* Radar ping: fires once per heartbeat cycle, right after the second
+   thump, instead of running on its own independent loop. */
 .status-dot::after {
   position: absolute;
   inset: -1px;
   border: 1px solid var(--accent);
   border-radius: 50%;
   content: "";
-  animation: status-ping 3.2s cubic-bezier(0.25, 0.6, 0.3, 1) infinite;
+  animation: status-ping 2.8s infinite;
 }
 
+/* Lub-dub, then a long rest — a monitor pulse, not a smooth fade.
+   Per-keyframe animation-timing-function gives each thump a fast
+   attack and a softer release; the ring shadow doubles as a glow that
+   flares on each beat via color-mix alpha, not a blur filter. */
 @keyframes status-breathe {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
+  0% {
+    opacity: 0.55;
+    transform: scale(1);
+    box-shadow:
+      0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent),
+      0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent);
+    animation-timing-function: ease-out;
+  }
+  4% {
+    opacity: 1;
+    transform: scale(1.18);
+    box-shadow:
+      0 0 5px 1px color-mix(in srgb, var(--accent) 60%, transparent),
+      0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent);
+    animation-timing-function: ease-in;
+  }
+  10% {
+    opacity: 0.6;
+    transform: scale(1);
+    box-shadow:
+      0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent),
+      0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent);
+    animation-timing-function: ease-out;
+  }
+  14% {
+    opacity: 1;
+    transform: scale(1.18);
+    box-shadow:
+      0 0 5px 1px color-mix(in srgb, var(--accent) 60%, transparent),
+      0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent);
+    animation-timing-function: ease;
+  }
+  24%, 100% {
+    opacity: 0.55;
+    transform: scale(1);
+    box-shadow:
+      0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent),
+      0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent);
+  }
 }
 
 /* Kicker expands in two steps on click: base line, then team, then org.
@@ -256,6 +298,7 @@ html.has-3d-scene .terrain-scene canvas {
 
 .hero-kicker-base,
 .hero-kicker-detail,
+.hero-kicker-sep,
 .hero-kicker-more {
   /* An inline-block with non-visible overflow uses its bottom margin
      edge as its baseline instead of its text's actual baseline (CSS
@@ -279,6 +322,24 @@ html.has-3d-scene .terrain-scene canvas {
 .hero-kicker-toggle[data-level="2"] .hero-kicker-detail[data-level="1"],
 .hero-kicker-toggle[data-level="2"] .hero-kicker-detail[data-level="2"] {
   max-width: 20em;
+  opacity: 1;
+}
+
+/* Separators (the comma, the middot) live as plain inline text glued to
+   the word before them, not inside the atomic .hero-kicker-detail boxes.
+   Atomic inline-blocks get an implicit break opportunity immediately
+   before them regardless of adjacent whitespace, so a separator living
+   as the first character of one could get stranded alone at the start
+   of a wrapped line on narrow screens. Plain inline content glued with
+   no whitespace never breaks from its preceding word. */
+.hero-kicker-sep {
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.hero-kicker-toggle[data-level="1"] .hero-kicker-sep[data-level="1"],
+.hero-kicker-toggle[data-level="2"] .hero-kicker-sep[data-level="1"],
+.hero-kicker-toggle[data-level="2"] .hero-kicker-sep[data-level="2"] {
   opacity: 1;
 }
 
@@ -306,8 +367,9 @@ html.has-3d-scene .terrain-scene canvas {
 }
 
 @keyframes status-ping {
-  0%, 18% { opacity: 0.7; transform: scale(1); }
-  70%, 100% { opacity: 0; transform: scale(3.2); }
+  0%, 14% { opacity: 0; transform: scale(1); }
+  22% { opacity: 0.7; transform: scale(1); }
+  65%, 100% { opacity: 0; transform: scale(3.2); }
 }
 
 /* ---------------------------------------------------------- theme toggle */
