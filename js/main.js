@@ -278,6 +278,30 @@
 })();
 
 (() => {
+  // Kicker's org detail expands one level per click: base -> team -> org -> base.
+  const toggle = document.querySelector(".hero-kicker-toggle");
+  if (!toggle) return;
+
+  const details = [...toggle.querySelectorAll(".hero-kicker-detail")];
+  let level = 0;
+
+  const render = () => {
+    toggle.dataset.level = String(level);
+    toggle.setAttribute("aria-expanded", level > 0 ? "true" : "false");
+    details.forEach((el) => {
+      el.setAttribute("aria-hidden", Number(el.dataset.level) <= level ? "false" : "true");
+    });
+  };
+
+  toggle.addEventListener("click", () => {
+    level = (level + 1) % 3;
+    render();
+  });
+
+  render();
+})();
+
+(() => {
   console.log("%cHi, I'm Kyle.", "font: 600 22px system-ui, sans-serif; color: #2251ff;");
   console.log(
     "You're in the console, so you're probably the audience this site is actually for. " +
