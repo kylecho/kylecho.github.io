@@ -91,7 +91,7 @@ export default {
           p: "Server state is a cache of data you don't own: it can be stale the moment it arrives, someone else can change it, and it needs fetching, deduplication, invalidation, and refresh. Client state (open modals, form drafts, selections) is owned by the UI, synchronous, and never stale.",
         },
         {
-          p: "Treating server state as client state is how apps end up hand-rolling caches in Redux: loading flags, request dedupe, and invalidation logic scattered across reducers. Query caches (TanStack Query, SWR, Apollo) exist because staleness, refetching, and cache keys are one reusable problem; the `useFetch` and promise-cache drills from earlier decks are the primitives they industrialize.",
+          p: "Treating server state as client state is how apps end up hand-rolling caches in Redux: loading flags, request dedupe, and invalidation logic scattered across reducers. Query caches (TanStack Query, SWR, Apollo) exist because staleness, refetching, and cache keys are one reusable problem; the `useFetch` and promise-cache cards from earlier decks are the primitives they industrialize.",
         },
         {
           p: "What's left over after the query cache takes server state is usually small enough for `useState` and context, with an external store (Zustand, `useSyncExternalStore`) only for fast-changing shared state.",
