@@ -276,3 +276,12 @@
     }
   });
 })();
+
+(() => {
+  console.log("%cHi, I'm Kyle.", "font: 600 22px system-ui, sans-serif; color: #2251ff;");
+  console.log(
+    "You're in the console, so you're probably the audience this site is actually for. " +
+      "There's a keyboard shortcut if you want it: g, then h / n / p, jumps Home / Notes / Patterns."
+  );
+  console.log("kylecho.work@gmail.com");
+})();
