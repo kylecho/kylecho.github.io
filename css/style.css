@@ -546,9 +546,24 @@ html.has-3d-scene .terrain-scene canvas {
 }
 
 .reveal-ready .hero-kicker[data-reveal] { transition-delay: 120ms; }
-.reveal-ready .hero-intro[data-reveal] { transition-delay: 260ms; }
-.reveal-ready .recently[data-reveal] { transition-delay: 380ms; }
-.reveal-ready .hero-actions[data-reveal] { transition-delay: 500ms; }
+.reveal-ready .hero-intro[data-reveal] { transition-delay: 900ms; }
+.reveal-ready .recently[data-reveal] { transition-delay: 1030ms; }
+.reveal-ready .hero-actions[data-reveal] { transition-delay: 1160ms; }
+
+/* hero-index sits at the very bottom of the 100svh hero, past the shared
+   reveal observer's -8% rootMargin, so it never registers as "intersecting"
+   and would stay invisible forever. It's always part of the initial hero
+   viewport (unlike scroll-triggered reveals elsewhere), so it doesn't need
+   intersection detection at all — a plain delayed keyframe closes the
+   sequence instead. */
+.reveal-ready .hero-index {
+  animation: hero-index-in 700ms cubic-bezier(0.2, 0.7, 0.2, 1) 1280ms both;
+}
+
+@keyframes hero-index-in {
+  from { opacity: 0; transform: translateY(1rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 .split .word {
   display: inline-block;
