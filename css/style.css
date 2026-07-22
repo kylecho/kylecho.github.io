@@ -231,8 +231,13 @@ html.has-3d-scene .terrain-scene canvas {
    max-width/opacity (not width) so the unopened state has zero layout
    cost and the transition still animates an unknown text length. */
 .hero-kicker-toggle {
-  display: inline-flex;
-  align-items: baseline;
+  /* inline, not inline-flex: the base text and each detail span need to
+     wrap together as one continuous line, the way normal text wraps.
+     Flex lays children out as separate boxes instead of merging their
+     wrapping, which scrambles word order once the base text needs two
+     lines on a narrow screen. */
+  display: inline;
+  text-align: left;
   background: none;
   border: none;
   padding: 0;
