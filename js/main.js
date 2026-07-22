@@ -241,3 +241,38 @@
     });
   });
 })();
+
+(() => {
+  // "g" then a letter jumps pages, GitHub/Gmail-style. Two-key chord so
+  // typing "h" or "n" alone (e.g. in the CRDT demo's live textareas) is safe.
+  const routes = { h: "/", n: "/notes/", p: "/patterns/" };
+  let armed = false;
+  let armTimer;
+
+  const isEditable = (el) =>
+    !!(el && el.closest && el.closest("input, textarea, select, [contenteditable]"));
+
+  document.addEventListener("keydown", (event) => {
+    if (event.metaKey || event.ctrlKey || event.altKey || isEditable(event.target)) {
+      armed = false;
+      return;
+    }
+
+    if (!armed) {
+      if (event.key === "g") {
+        armed = true;
+        clearTimeout(armTimer);
+        armTimer = setTimeout(() => (armed = false), 1200);
+      }
+      return;
+    }
+
+    armed = false;
+    clearTimeout(armTimer);
+    const path = routes[event.key];
+    if (path && path !== location.pathname) {
+      event.preventDefault();
+      location.href = path;
+    }
+  });
+})();
