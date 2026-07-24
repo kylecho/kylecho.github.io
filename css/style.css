@@ -629,10 +629,15 @@ html.has-3d-scene .terrain-scene canvas {
   transform: translateY(0);
 }
 
-.reveal-ready .hero-kicker[data-reveal] { transition-delay: 120ms; }
-.reveal-ready .hero-intro[data-reveal] { transition-delay: 900ms; }
-.reveal-ready .recently[data-reveal] { transition-delay: 1030ms; }
-.reveal-ready .hero-actions[data-reveal] { transition-delay: 1160ms; }
+/* Only the headline animates during the first ~1s — kicker and the
+   theme toggle now wait with everything else instead of appearing
+   immediately, so the pause is genuinely just "Hi, I'm Kyle." before
+   the rest of the page cascades in behind it. */
+.reveal-ready .hero-kicker[data-reveal] { transition-delay: 1050ms; }
+.reveal-ready .theme-toggle[data-reveal] { transition-delay: 1050ms; }
+.reveal-ready .hero-intro[data-reveal] { transition-delay: 1180ms; }
+.reveal-ready .recently[data-reveal] { transition-delay: 1310ms; }
+.reveal-ready .hero-actions[data-reveal] { transition-delay: 1440ms; }
 
 /* hero-index sits at the very bottom of the 100svh hero, past the shared
    reveal observer's -8% rootMargin, so it never registers as "intersecting"
@@ -641,7 +646,7 @@ html.has-3d-scene .terrain-scene canvas {
    intersection detection at all — a plain delayed keyframe closes the
    sequence instead. */
 .reveal-ready .hero-index {
-  animation: hero-index-in 700ms cubic-bezier(0.2, 0.7, 0.2, 1) 1280ms both;
+  animation: hero-index-in 700ms cubic-bezier(0.2, 0.7, 0.2, 1) 1560ms both;
 }
 
 @keyframes hero-index-in {

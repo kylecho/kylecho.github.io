@@ -82,7 +82,14 @@ import * as THREE from "./vendor/three.module.min.js";
     const camera = new THREE.PerspectiveCamera(58, 1, 0.1, 40);
     const CAM_BASE = { x: 0, y: 1.6, z: 4.9 };
     const LOOK_AT = new THREE.Vector3(0, 0.2, -1.6);
-    camera.position.set(CAM_BASE.x, CAM_BASE.y, CAM_BASE.z);
+
+    // Arrival: the camera dollies in from further back over the same ~1s
+    // window the hero text holds on "Hi, I'm Kyle." alone (see style.css's
+    // reveal-ready delays), so the pause has something happening in it
+    // instead of a static scene sitting under a blank hold.
+    const INTRO_DURATION = 1.0;
+    const INTRO_START_Z = CAM_BASE.z + 1.6;
+    camera.position.set(CAM_BASE.x, CAM_BASE.y, INTRO_START_Z);
     camera.lookAt(LOOK_AT);
 
     const WIDTH = 16;
@@ -135,7 +142,11 @@ import * as THREE from "./vendor/three.module.min.js";
     const gridMaterial = new THREE.LineBasicMaterial({
       vertexColors: true,
       transparent: true,
-      opacity: theme.light ? 0.95 : 0.75,
+      // Starts at 0, not the resting opacity: the per-frame theme-lerp
+      // below (themeK) eases it up toward theme.light-based target on
+      // its own, so the terrain materializes into view during the
+      // arrival instead of popping in fully-formed.
+      opacity: 0,
     });
 
     scene.add(new THREE.LineSegments(gridGeometry, gridMaterial));
@@ -163,7 +174,7 @@ import * as THREE from "./vendor/three.module.min.js";
       map: makeDotTexture(),
       color: theme.dot.clone(),
       transparent: true,
-      opacity: theme.light ? 0.75 : 0.9,
+      opacity: 0, // see gridMaterial above — eased in by the per-frame lerp
       depthWrite: false,
       sizeAttenuation: true,
     });
@@ -316,6 +327,11 @@ import * as THREE from "./vendor/three.module.min.js";
       parallax.y += (parallax.ty - parallax.y) * 0.04;
       camera.position.x = CAM_BASE.x + Math.sin(elapsed * 0.1) * 0.3 + parallax.x * 0.5;
       camera.position.y = CAM_BASE.y + parallax.y * 0.25;
+      // Ease-out cubic dolly from INTRO_START_Z to CAM_BASE.z; clamps to
+      // 1 past INTRO_DURATION so this is a no-op (holds CAM_BASE.z) for
+      // the rest of the session.
+      const introT = 1 - Math.pow(1 - Math.min(elapsed / INTRO_DURATION, 1), 3);
+      camera.position.z = INTRO_START_Z + (CAM_BASE.z - INTRO_START_Z) * introT;
       camera.lookAt(LOOK_AT);
 
       pointer.strength += ((pointer.active ? 1 : 0) - pointer.strength) * 0.07;
