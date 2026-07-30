@@ -1,12 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>Kyle Cho — Notes</title>
-  <subtitle>Lessons from operating production systems.</subtitle>
+  <subtitle>Lessons from building and operating production systems.</subtitle>
   <link href="https://kylecho.com/notes/feed.xml" rel="self"/>
   <link href="https://kylecho.com/notes/"/>
   <id>https://kylecho.com/notes/</id>
-  <updated>2026-07-20T00:00:00Z</updated>
+  <updated>2026-08-02T00:00:00Z</updated>
   <author><name>Kyle Cho</name></author>
+
+  <entry>
+    <title>not everything belongs in state</title>
+    <link href="https://kylecho.com/notes/not-everything-belongs-in-state/"/>
+    <id>https://kylecho.com/notes/not-everything-belongs-in-state/</id>
+    <updated>2026-08-02T00:00:00Z</updated>
+    <summary>A drag handle that updates React state on every pointermove re-renders the layout at input speed. Three tiers of state, where per-frame gesture state actually belongs, and a side-by-side divider you can drag.</summary>
+  </entry>
 
   <entry>
     <title>no one has to agree</title>

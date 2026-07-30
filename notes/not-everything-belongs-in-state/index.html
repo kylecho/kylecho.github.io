@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A drag handle that updates React state on every pointermove re-renders the layout at input speed. Three tiers of state, where per-frame gesture state actually belongs, and a side-by-side divider you can drag.">
+  <meta name="theme-color" content="#070d1c">
+
+  <title>not everything belongs in state — Kyle Cho</title>
+
+  <link rel="canonical" href="https://kylecho.com/notes/not-everything-belongs-in-state/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Kyle Cho">
+  <meta property="og:title" content="not everything belongs in state">
+  <meta property="og:description" content="A drag handle that updates React state on every pointermove re-renders the layout at input speed. Where per-frame gesture state actually belongs, with a divider you can drag both ways.">
+  <meta property="og:url" content="https://kylecho.com/notes/not-everything-belongs-in-state/">
+  <meta property="og:image" content="https://kylecho.com/assets/og-note-state.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="article:published_time" content="2026-08-02">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="not everything belongs in state">
+  <meta name="twitter:description" content="A drag handle that updates React state on every pointermove re-renders the layout at input speed. Where per-frame gesture state actually belongs.">
+  <meta name="twitter:image" content="https://kylecho.com/assets/og-note-state.png">
+  <link rel="alternate" type="application/atom+xml" title="Kyle Cho — Notes" href="/notes/feed.xml">
+
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (t !== "light" && t !== "dark") {
+          t = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+          localStorage.setItem("theme", t);
+        }
+        document.documentElement.dataset.theme = t;
+      } catch (e) {
+        document.documentElement.dataset.theme = "dark";
+      }
+    })();
+  </script>
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/patterns.css">
+  <link rel="stylesheet" href="/css/notes.css">
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "not everything belongs in state",
+      "datePublished": "2026-08-02",
+      "author": { "@type": "Person", "name": "Kyle Cho", "url": "https://kylecho.com" },
+      "url": "https://kylecho.com/notes/not-everything-belongs-in-state/"
+    }
+  </script>
+</head>
+<body class="patterns-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <main class="notes" id="main">
+    <header class="patterns-top">
+      <a class="patterns-home" href="/notes/">&larr; Notes</a>
+
+      <button class="theme-toggle" type="button" aria-label="Switch to light mode">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none">
+          <mask id="theme-mask">
+            <rect width="24" height="24" fill="#fff"/>
+            <circle class="moon-bite" cx="17" cy="7" r="7" fill="#000"/>
+          </mask>
+          <circle class="sun-core" cx="12" cy="12" r="8" fill="currentColor" mask="url(#theme-mask)"/>
+          <g class="sun-rays" stroke="currentColor">
+            <line x1="12" y1="1.5" x2="12" y2="3.8"/>
+            <line x1="12" y1="20.2" x2="12" y2="22.5"/>
+            <line x1="1.5" y1="12" x2="3.8" y2="12"/>
+            <line x1="20.2" y1="12" x2="22.5" y2="12"/>
+            <line x1="4.6" y1="4.6" x2="6.2" y2="6.2"/>
+            <line x1="17.8" y1="17.8" x2="19.4" y2="19.4"/>
+            <line x1="4.6" y1="19.4" x2="6.2" y2="17.8"/>
+            <line x1="17.8" y1="6.2" x2="19.4" y2="4.6"/>
+          </g>
+        </svg>
+      </button>
+    </header>
+
+    <article class="note-article">
+      <p class="deck-meta">Notes &middot; August 2026 &middot; React, performance</p>
+      <h1>not everything belongs in state.</h1>
+
+      <p>
+        I built a small
+        <a href="https://hnreader-flax.vercel.app" target="_blank" rel="noopener noreferrer">Hacker News reader</a>
+        with three columns: the story list, the article, and one comment
+        thread at a time. Between the last two sits a draggable divider.
+        It&rsquo;s the least glamorous piece of the app, and it forced the
+        sharpest thinking about where state lives.
+      </p>
+
+      <h2>The obvious wiring</h2>
+      <p>
+        React has one story for interaction: events update state, state
+        renders the view. For a divider, that reads as: <code>pointermove</code>
+        computes a new split ratio, <code>setState</code> stores it, the
+        columns re-render at their new widths. Correct, idiomatic, and it
+        puts a full render-and-commit cycle behind every twitch of the hand.
+      </p>
+      <p>
+        <code>pointermove</code> fires at the display&rsquo;s rate: 60 events
+        a second on most screens, 120 or more on recent ones. And the subtree
+        that reads the ratio is the two biggest components on the page, an
+        article view and a comment thread. So the cost of one drag frame
+        isn&rsquo;t &ldquo;set a width.&rdquo; It&rsquo;s &ldquo;ask the
+        article and every visible comment whether they&rsquo;d render
+        differently now.&rdquo; The answer is always no. The question is what
+        it costs to keep asking.
+      </p>
+
+      <h2>What a frame can afford</h2>
+      <p>
+        A 60Hz display gives you 16.7ms per frame; 120Hz gives you 8.3ms. The
+        browser spends part of that on its own pipeline: style, layout,
+        paint, composite. Whatever remains is the budget for your render, and
+        a comment thread&rsquo;s render cost is variable: long threads, cold
+        caches, whatever memoization missed. When the work overruns the
+        budget, the frame drops. A dropped frame during a drag isn&rsquo;t an
+        abstraction. The handle visibly stops following the hand, then jumps.
+        Users can&rsquo;t name it; they just call the app heavy.
+      </p>
+
+      <h2>Three kinds of state</h2>
+      <p>
+        Working through the divider ended up sorting the whole app&rsquo;s
+        state into three tiers.
+      </p>
+      <p>
+        <strong>State the UI shows at rest.</strong> Which story is selected,
+        which thread is open. This is <code>useState</code> territory: when
+        it changes, the view should re-render, and React should know.
+      </p>
+      <p>
+        <strong>State that is a side effect on the DOM.</strong> Each
+        story&rsquo;s scroll position, restored when you navigate back to it.
+        Restoring scroll re-renders nothing, so it lives in a ref keyed by
+        story id. Putting it in <code>useState</code> would buy re-renders
+        nobody asked for.
+      </p>
+      <p>
+        <strong>State that changes every frame while a gesture is live.</strong>
+        The divider&rsquo;s ratio, mid-drag. Its rate is the input
+        device&rsquo;s rate, not the decision rate of the interface, and for
+        the duration of the gesture the DOM itself is the right owner.
+      </p>
+      <p>
+        The ratio is the interesting one because it moves between tiers. At
+        rest it&rsquo;s tier one: the layout renders from it. While a finger
+        is down it&rsquo;s tier three. The mistake is treating it as tier one
+        at tier three&rsquo;s frequency.
+      </p>
+
+      <h2>The fix</h2>
+      <p>Simplified from the app:</p>
+      <pre class="code"><code class="language-js">const ratioRef = useRef(0.5);            // truth during the drag
+const [ratio, setRatio] = useState(0.5); // truth at rest
+
+function onPointerMove(e) {
+  const { startX, startRatio, width } = dragSession;
+  const next = clamp(startRatio + (e.clientX - startX) / width);
+  ratioRef.current = next;
+  columnEl.style.flex = `0 0 ${next * 100}%`; // one style write, no render
+}
+
+function onPointerUp() {
+  window.removeEventListener("pointermove", onPointerMove);
+  window.removeEventListener("pointerup", onPointerUp);
+  setRatio(ratioRef.current); // tell React once, when it matters
+}</code></pre>
+      <p>
+        During the drag, each <code>pointermove</code> costs one clamp and
+        one style write; the browser flexes two boxes and composites. No
+        component function runs. On <code>pointerup</code>, a single
+        <code>setState</code> folds the result back into React, and the
+        tree&rsquo;s picture of the world is true again. The window where the
+        DOM and React disagree lasts exactly as long as a finger is down, and
+        one line closes it.
+      </p>
+
+      <h2>Feel it</h2>
+      <p>
+        Below, the same divider twice. Both panes hold the same rows. The
+        left routes every move through a rebuild of its rows before setting
+        the width, which is what an unmemoized subtree re-render amounts to;
+        the right writes the width and touches nothing else. Drag both, then
+        raise the row count and drag again. The counters are measured live,
+        nothing staged.
+      </p>
+
+      <div class="loop-viz drag-viz" id="drag-viz" aria-label="Divider drag demo"></div>
+
+      <p>
+        One honesty note: the left pane rebuilds real DOM rows, which is more
+        work than React&rsquo;s reconciler (the diff that decides what
+        actually changed) would do for rows that didn&rsquo;t change. Read
+        the slider as &ldquo;what your subtree&rsquo;s render costs,&rdquo;
+        however it gets spent. The shape is the point: the left side&rsquo;s
+        cost scales with the tree and rides the pointer&rsquo;s event rate.
+        The right side&rsquo;s cost is constant.
+      </p>
+
+      <h2>The tradeoff</h2>
+      <p>
+        Escaping the render loop creates two sources of truth while the
+        gesture is live, and that has teeth. If unrelated state updates
+        mid-drag, React re-renders and stamps the stale rest-state width
+        right back onto the column. In this app nothing else updates during a
+        drag, and the next <code>pointermove</code> overwrites the stomp
+        within a frame, so the race is short and acceptable. In an app where
+        things do update mid-gesture &mdash; incoming data, timers,
+        collaboration &mdash; move the escaped value somewhere React
+        doesn&rsquo;t own at all, like a CSS variable on a container, so a
+        re-render can&rsquo;t clobber it.
+      </p>
+      <p>
+        The same app also resizes with arrow keys, and that path goes through
+        <code>setState</code> on every keypress. Deliberately. Key repeat
+        arrives at maybe thirty events a second, and each press is a
+        decision, not a transient; the render loop absorbs it without
+        dropping anything. The escape hatch isn&rsquo;t for
+        &ldquo;resizing.&rdquo; It&rsquo;s for input that arrives at frame
+        rate. Judge by rate, not by feature.
+      </p>
+
+      <h2>The principle</h2>
+      <p>
+        <code>useState</code> is for what the interface shows once it
+        settles. Refs are for facts that change nothing visible. And a live
+        gesture is the DOM&rsquo;s business until it ends: route it through
+        React at the rate decisions are made, not the rate the pointer moves.
+      </p>
+
+      <div class="drill-actions note-foot-nav">
+        <a class="btn" href="/notes/">&larr; All notes</a>
+        <a class="btn" href="/">Home</a>
+      </div>
+    </article>
+
+    <footer class="patterns-foot">
+      <span>© <span data-year-full>2026</span> Kyle Cho</span>
+      <span>37.7749&deg; N / 122.4194&deg; W</span>
+    </footer>
+  </main>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/vendor/prism.min.js"></script>
+  <script src="/js/drag-viz.js" defer></script>
+</body>
+</html>

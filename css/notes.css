@@ -441,3 +441,83 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ------------------------------------------------------ divider drag demo */
+
+.dviz-grid {
+  display: grid;
+  margin-top: 1rem;
+  gap: 0.75rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.dviz-stage {
+  margin: 0;
+}
+
+.dviz-stage figcaption {
+  margin-bottom: 0.5rem;
+  color: var(--text-soft);
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.dviz-cols {
+  display: flex;
+  height: 150px;
+  overflow: hidden;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+}
+
+.dviz-col {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.dviz-col:last-child {
+  flex: 1 1 0;
+}
+
+.dviz-rows {
+  padding: 0.5rem;
+}
+
+.dviz-row {
+  height: 7px;
+  margin-bottom: 6px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--text-mute) 30%, transparent);
+}
+
+.dviz-handle {
+  flex: none;
+  width: 8px;
+  cursor: col-resize;
+  touch-action: none;
+  background: var(--line);
+  transition: background 150ms ease;
+}
+
+.dviz-handle:hover,
+.dviz-handle.is-dragging {
+  background: var(--accent);
+}
+
+.dviz-stage .viz-counters {
+  min-height: 1.5em;
+}
+
+@media (max-width: 620px) {
+  .dviz-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dviz-handle {
+    transition: none;
+  }
+}
