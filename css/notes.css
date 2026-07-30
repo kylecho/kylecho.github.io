@@ -96,6 +96,21 @@
   color: var(--accent);
 }
 
+/* Inline prose links (:not(.btn) excludes the footer nav buttons, which
+   live in .note-article too but already read as buttons) */
+.note-article a:not(.btn) {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  text-underline-offset: 0.15em;
+  transition: text-decoration-color 150ms ease;
+}
+
+.note-article a:not(.btn):hover,
+.note-article a:not(.btn):focus-visible {
+  text-decoration-color: currentColor;
+}
+
 .note-article code {
   padding: 0.1em 0.35em;
   background: var(--code-bg);
