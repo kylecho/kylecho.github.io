@@ -620,8 +620,8 @@ html.has-3d-scene .terrain-scene canvas {
   opacity: 0;
   transform: translateY(1.5rem);
   transition:
-    opacity 700ms cubic-bezier(0.2, 0.7, 0.2, 1),
-    transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    opacity 380ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 380ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 .reveal-ready [data-reveal].is-visible {
@@ -629,15 +629,36 @@ html.has-3d-scene .terrain-scene canvas {
   transform: translateY(0);
 }
 
-/* Only the headline animates during the first ~1s — kicker and the
-   theme toggle now wait with everything else instead of appearing
-   immediately, so the pause is genuinely just "Hi, I'm Kyle." before
-   the rest of the page cascades in behind it. */
-.reveal-ready .hero-kicker[data-reveal] { transition-delay: 1050ms; }
-.reveal-ready .theme-toggle[data-reveal] { transition-delay: 1050ms; }
-.reveal-ready .hero-intro[data-reveal] { transition-delay: 1180ms; }
-.reveal-ready .recently[data-reveal] { transition-delay: 1310ms; }
-.reveal-ready .hero-actions[data-reveal] { transition-delay: 1440ms; }
+/* The hero is always in the initial viewport, so its reveal never needed
+   intersection detection — and depending on it made the animation a coin
+   flip: the observer's first callback can land in the same frame that
+   applies the hidden state, leaving the browser nothing to interpolate, so
+   on most warm loads these elements simply appeared. Keyframes run from
+   page load and play the same way every time.
+
+   The cascade also overlaps the headline instead of queueing behind it. An
+   earlier version held everything back 1050ms to give "Hi, I'm Kyle." an
+   uncontested beat, which cost 2.1s to full paint and left an 850ms gap
+   where the page looked empty. These offsets read as one movement. */
+.reveal-ready .hero-kicker[data-reveal],
+.reveal-ready .theme-toggle[data-reveal],
+.reveal-ready .hero-intro[data-reveal],
+.reveal-ready .recently[data-reveal],
+.reveal-ready .hero-actions[data-reveal] {
+  transition: none;
+  animation: hero-reveal-in 380ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes hero-reveal-in {
+  from { opacity: 0; transform: translateY(1.5rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.reveal-ready .hero-kicker[data-reveal] { animation-delay: 120ms; }
+.reveal-ready .theme-toggle[data-reveal] { animation-delay: 120ms; }
+.reveal-ready .hero-intro[data-reveal] { animation-delay: 180ms; }
+.reveal-ready .recently[data-reveal] { animation-delay: 240ms; }
+.reveal-ready .hero-actions[data-reveal] { animation-delay: 300ms; }
 
 /* hero-index sits at the very bottom of the 100svh hero, past the shared
    reveal observer's -8% rootMargin, so it never registers as "intersecting"
@@ -645,8 +666,10 @@ html.has-3d-scene .terrain-scene canvas {
    viewport (unlike scroll-triggered reveals elsewhere), so it doesn't need
    intersection detection at all — a plain delayed keyframe closes the
    sequence instead. */
+/* Closes the cascade. Same keyframe treatment as the rest of the hero now,
+   so all six offsets are measured from the same clock. */
 .reveal-ready .hero-index {
-  animation: hero-index-in 700ms cubic-bezier(0.2, 0.7, 0.2, 1) 1560ms both;
+  animation: hero-index-in 380ms cubic-bezier(0.2, 0.7, 0.2, 1) 360ms both;
 }
 
 @keyframes hero-index-in {
@@ -664,15 +687,20 @@ html.has-3d-scene .terrain-scene canvas {
   vertical-align: top;
 }
 
+/* Keyframes rather than a transition, for the same reason as the hero
+   reveal above: the observer could mark the heading visible before the
+   hidden state was ever committed, which occasionally dropped the word rise
+   or let the headline land after the text below it. Every [data-split]
+   heading sits in the initial viewport, so nothing here needs observing. */
 .split .word-inner {
   display: inline-block;
-  transform: translateY(145%);
-  transition: transform 850ms cubic-bezier(0.22, 0.65, 0.2, 1);
-  transition-delay: calc(var(--i, 0) * 42ms);
+  animation: word-rise 480ms cubic-bezier(0.22, 0.65, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 28ms);
 }
 
-.split.is-visible .word-inner {
-  transform: translateY(0);
+@keyframes word-rise {
+  from { transform: translateY(145%); }
+  to { transform: translateY(0); }
 }
 
 /* --------------------------------------------------------------- cursor */
@@ -778,12 +806,18 @@ html.custom-cursor input[type="search"] {
     scroll-behavior: auto;
   }
 
+  /* Delays matter as much as durations here: zeroing only the durations
+     still left the staged hero reveal waiting out its full 1.5s of
+     transition-delay, so anyone asking for less motion got a blank page
+     for longer than everyone else. */
   *,
   *::before,
   *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
   }
 }

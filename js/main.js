@@ -44,10 +44,10 @@
 
   // ---- reveal on load/scroll (kicker, intro, list, actions) ---------------
   if (hasIO) {
-    const targets = [
-      ...document.querySelectorAll("[data-reveal]"),
-      ...document.querySelectorAll(".split"),
-    ];
+    // Split headings animate straight from CSS keyframes, so they aren't
+    // observed; only [data-reveal] elements need intersection detection, and
+    // in the hero even those are keyframe-driven.
+    const targets = [...document.querySelectorAll("[data-reveal]")];
 
     if (targets.length) {
       document.body.classList.add("reveal-ready");
