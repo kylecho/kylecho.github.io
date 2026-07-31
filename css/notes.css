@@ -618,7 +618,7 @@
 
 /* Past 100% of the request the bar is pinned, so change colour instead */
 .hviz-bar.is-past > i {
-  background: color-mix(in srgb, var(--accent) 55%, #ff8a5c);
+  background: color-mix(in srgb, var(--accent) 55%, var(--warn));
 }
 
 .hviz-podrow {
@@ -679,7 +679,7 @@
 }
 
 .hviz-foot.is-bad {
-  color: #ff8a5c;
+  color: var(--warn);
 }
 
 .hviz-sparkwrap {

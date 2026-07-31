@@ -5,6 +5,8 @@
   --text: #f2f5fd;
   --text-soft: rgba(226, 235, 255, 0.82);
   --text-mute: rgba(206, 220, 250, 0.58);
+  /* Alert colour for measured-bad values; per theme so it stays legible on both */
+  --warn: #ff8a5c;
   --accent: #4d6bff;
   --line: rgba(255, 255, 255, 0.16);
   --grid-line: rgba(124, 155, 255, 0.06);
@@ -32,7 +34,10 @@
   --bg-rgb: 245, 247, 251;
   --text: #0c1428;
   --text-soft: rgba(12, 20, 40, 0.78);
-  --text-mute: rgba(12, 20, 40, 0.55);
+  /* 0.55 measured 4.00:1 on --bg, just under the 4.5 needed for body text.
+     0.60 clears it at 4.70 and is visually near-identical. */
+  --text-mute: rgba(12, 20, 40, 0.6);
+  --warn: #b3400d;
   --accent: #2247e8;
   --line: rgba(12, 20, 40, 0.16);
   --grid-line: rgba(34, 71, 232, 0.08);
