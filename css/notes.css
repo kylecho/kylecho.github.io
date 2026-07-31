@@ -44,18 +44,6 @@
 
 /* Entry cards reuse .deck-card / .deck-meta / .deck-blurb from patterns.css */
 
-/* Quiet pointer to /patterns/. It sits below the essay list rather than in
-   the hero so the homepage makes one claim instead of two. */
-.notes-aside {
-  max-width: 640px;
-  margin-top: clamp(2rem, 5vh, 3rem);
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--line);
-  color: var(--text-mute);
-  font-size: 0.9rem;
-  line-height: 1.6;
-}
-
 /* ---------------------------------------------------------------- article */
 
 .note-article {
