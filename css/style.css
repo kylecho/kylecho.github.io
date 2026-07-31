@@ -497,6 +497,22 @@ html.has-3d-scene .terrain-scene canvas {
   color: var(--accent);
   content: "→";
   font-family: var(--mono);
+  flex: none;
+}
+
+/* Each line is one flex item next to the arrow. Without the wrapper, any
+   inline element inside the text becomes its own flex item and picks up the
+   0.85rem gap meant for the arrow. */
+.recently li > span {
+  min-width: 0;
+}
+
+/* The hard number is the line a skimming reader should catch first. Lifting
+   its contrast and weight does that without touching the type scale, which
+   is deliberately quiet everywhere below the headline. */
+.recently strong {
+  color: var(--text);
+  font-weight: 500;
 }
 
 /* --------------------------------------------------------------- actions */
