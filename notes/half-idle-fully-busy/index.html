@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A Node pod saturated at 100% event-loop utilization reads 49% CPU. Why CPU-based autoscaling can't see a single-threaded runtime, and what to scale on instead.">
+  <meta name="theme-color" content="#070d1c">
+
+  <title>half idle, fully busy &mdash; Kyle Cho</title>
+
+  <link rel="canonical" href="https://kylecho.com/notes/half-idle-fully-busy/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Kyle Cho">
+  <meta property="og:title" content="half idle, fully busy">
+  <meta property="og:description" content="A Node pod saturated at 100% event-loop utilization reads 49% CPU. Why CPU-based autoscaling can't see a single-threaded runtime.">
+  <meta property="og:url" content="https://kylecho.com/notes/half-idle-fully-busy/">
+  <meta property="og:image" content="https://kylecho.com/assets/og-note-hpa.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="article:published_time" content="2026-08-05">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="half idle, fully busy">
+  <meta name="twitter:description" content="A Node pod saturated at 100% event-loop utilization reads 49% CPU. The autoscaler never fires.">
+  <meta name="twitter:image" content="https://kylecho.com/assets/og-note-hpa.png">
+  <link rel="alternate" type="application/atom+xml" title="Kyle Cho — Notes" href="/notes/feed.xml">
+
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (t !== "light" && t !== "dark") {
+          t = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+          localStorage.setItem("theme", t);
+        }
+        document.documentElement.dataset.theme = t;
+      } catch (e) {
+        document.documentElement.dataset.theme = "dark";
+      }
+    })();
+  </script>
+
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/patterns.css">
+  <link rel="stylesheet" href="/css/notes.css">
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "half idle, fully busy",
+      "datePublished": "2026-08-05",
+      "author": { "@type": "Person", "name": "Kyle Cho", "url": "https://kylecho.com" },
+      "url": "https://kylecho.com/notes/half-idle-fully-busy/"
+    }
+  </script>
+</head>
+<body class="patterns-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <main class="notes" id="main">
+    <header class="patterns-top">
+      <a class="patterns-home" href="/notes/">&larr; Notes</a>
+
+      <button class="theme-toggle" type="button" aria-label="Switch to light mode">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none">
+          <mask id="theme-mask">
+            <rect width="24" height="24" fill="#fff"/>
+            <circle class="moon-bite" cx="17" cy="7" r="7" fill="#000"/>
+          </mask>
+          <circle class="sun-core" cx="12" cy="12" r="8" fill="currentColor" mask="url(#theme-mask)"/>
+          <g class="sun-rays" stroke="currentColor">
+            <line x1="12" y1="1.5" x2="12" y2="3.8"/>
+            <line x1="12" y1="20.2" x2="12" y2="22.5"/>
+            <line x1="1.5" y1="12" x2="3.8" y2="12"/>
+            <line x1="20.2" y1="12" x2="22.5" y2="12"/>
+            <line x1="4.6" y1="4.6" x2="6.2" y2="6.2"/>
+            <line x1="17.8" y1="17.8" x2="19.4" y2="19.4"/>
+            <line x1="4.6" y1="19.4" x2="6.2" y2="17.8"/>
+            <line x1="17.8" y1="6.2" x2="19.4" y2="4.6"/>
+          </g>
+        </svg>
+      </button>
+    </header>
+
+    <article class="note-article">
+      <p class="deck-meta">Notes &middot; August 2026 &middot; Kubernetes, Node.js</p>
+      <h1>half idle, fully busy.</h1>
+
+      <p>
+        A Node service stops coping somewhere around 300 requests a second.
+        The slowest 1% of requests, p99, go from 50ms to anywhere between
+        half a second and three. The process is doing every bit of work it
+        will ever do. The autoscaler, watching CPU, reads 49% and does
+        nothing.
+      </p>
+
+      <h2>The symptom</h2>
+      <p>
+        It looks like a broken metrics pipeline the first time you see it.
+        Latency graphs climbing, replica count flat on its floor, and a CPU
+        dashboard sitting calmly at just under half. Every component is
+        working exactly as designed. The autoscaler is reading a number that
+        has almost nothing to do with whether the service is busy.
+      </p>
+
+      <h2>One thread, two cores</h2>
+      <p>
+        Node runs your JavaScript on a single thread. Whatever else a pod is
+        given, the part that executes application code is one core wide, and
+        it cannot borrow a second one.
+      </p>
+      <p>
+        Kubernetes measures CPU utilization as a percentage of the pod&rsquo;s
+        <em>request</em>, not of a core. Ask for 2 CPUs, ordinary for a
+        service that also compresses responses and collects telemetry, and
+        the arithmetic is fixed before any traffic arrives: a completely
+        saturated JavaScript thread burns one core out of two and reports
+        50%. A Horizontal Pod Autoscaler (the controller that adds and
+        removes replicas, HPA from here) targeting 70% CPU will not fire at
+        49%. Not late. Never.
+      </p>
+      <p>
+        Here is an ordinary service measured across its saturation point:
+        about 3.6ms of JSON work per request on the event loop, plus a 40ms
+        downstream call, with load offered at a fixed arrival rate whether or
+        not the server keeps up.
+      </p>
+
+      <div class="note-table">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">offered</th>
+              <th scope="col">ELU</th>
+              <th scope="col">CPU</th>
+              <th scope="col">vs 2-core request</th>
+              <th scope="col">p50</th>
+              <th scope="col">p99</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>100 rps</td><td>41%</td><td>0.41</td><td class="is-key">21%</td><td>47ms</td><td>50ms</td></tr>
+            <tr><td>200 rps</td><td>67%</td><td>0.68</td><td class="is-key">34%</td><td>46ms</td><td>56ms</td></tr>
+            <tr><td>240 rps</td><td>81%</td><td>0.81</td><td class="is-key">40%</td><td>52ms</td><td>98ms</td></tr>
+            <tr><td>270 rps</td><td>91%</td><td>0.91</td><td class="is-key">45%</td><td>56ms</td><td>69ms</td></tr>
+            <tr><td>290 rps</td><td>96%</td><td>0.97</td><td class="is-key">48%</td><td>80ms</td><td>98ms</td></tr>
+            <tr><td>310 rps</td><td>98%</td><td>0.98</td><td class="is-key">49%</td><td>248ms</td><td>2566ms</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        That is one run. Across six, the ELU and CPU columns repeat within a
+        point; the last row&rsquo;s tail does not, landing anywhere from
+        478ms to 3.1 seconds. Past the knee, latency stops being a number and
+        starts being a range, which is its own argument for not scaling on it.
+      </p>
+      <p>
+        ELU is event-loop utilization: the fraction of time the loop spent
+        doing work rather than sitting idle. It tracks the truth all the way
+        up, 41% to 98%, and by the last row the service has fallen over. The
+        CPU column tracks the same truth, compressed into the bottom half of
+        its range, where the target lives that would have saved it. The
+        ceiling is arithmetic: one core divided by 3.6ms is about 277
+        requests a second, and past that the excess turns into queue instead
+        of into replicas.
+      </p>
+      <p>
+        This is the operational face of something I wrote about
+        <a href="/notes/await-isnt-free/">from inside the process</a>: work
+        that never shows up as a hot function still shows up as event-loop
+        utilization. The number nobody graphs is also the number nobody
+        scales on.
+      </p>
+
+      <h2>The other direction</h2>
+      <p>
+        The tempting conclusion is that CPU is a cautious, lagging version of
+        the right signal. It isn&rsquo;t. It can just as easily read high
+        while the loop is nearly empty.
+      </p>
+      <p>
+        Node hands some work to libuv&rsquo;s thread pool, a small set of
+        background threads (four by default) used for file I/O, DNS, some
+        crypto, and compression. That work burns CPU on threads that are not
+        the event loop. Here is identical gzip work, run once asynchronously
+        on the pool and once forced onto the loop:
+      </p>
+
+      <div class="note-table">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">same gzip work</th>
+              <th scope="col">ELU</th>
+              <th scope="col">CPU</th>
+              <th scope="col">throughput</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>async, on the thread pool</td><td class="is-key">15%</td><td class="is-key">3.87</td><td>351 ops/s</td></tr>
+            <tr><td>sync, on the event loop</td><td class="is-key">100%</td><td class="is-key">1.00</td><td>88 ops/s</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        Read those two rows against each other. The pod using nearly four
+        cores is the healthy one, four times faster, with an event loop that
+        is 85% idle; a CPU-targeting HPA sees 193% of a 2-core request and
+        scales out hard for no reason. The pod using exactly one core is the
+        dead one, and CPU reports it as half idle. Same work, opposite
+        readings, and CPU is wrong in both directions. It is not a
+        conservative proxy for saturation. It is a different quantity that
+        happens to correlate when your runtime uses every core it is given,
+        which Node does not.
+      </p>
+
+      <h2>Why not event-loop lag</h2>
+      <p>
+        <code>perf_hooks</code> has exposed the right number since Node 14.10.
+        Call it with a previous reading and it returns the utilization for the
+        interval between them, a ratio of active to total loop time that needs
+        no calibration against instance size:
+      </p>
+      <pre class="code"><code class="language-js">import { performance } from "node:perf_hooks";
+
+let last = performance.eventLoopUtilization();
+
+// Sample on the period your scraper collects on.
+setInterval(() =&gt; {
+  const next = performance.eventLoopUtilization();
+  const { utilization } = performance.eventLoopUtilization(next, last);
+  last = next;
+  eluGauge.set(utilization); // 0..1, ready for the HPA
+}, 15_000).unref();</code></pre>
+      <p>
+        The better-known metric is lag: schedule a timer for 100ms, measure
+        how late it fires, call the difference the delay. It makes an
+        excellent alert and a poor autoscaling input, for a reason that has
+        nothing to do with accuracy. The HPA is a proportional controller, and
+        its entire decision is one line:
+      </p>
+      <pre class="code"><code class="language-js">desiredReplicas = ceil(currentReplicas * (currentMetric / targetMetric))</code></pre>
+      <p>
+        The formula assumes the metric scales with load: double the ratio,
+        double the replicas. ELU satisfies that by construction, bounded on 0
+        to 1 and rising with traffic as the table shows.
+      </p>
+      <p>
+        Lag does not. It sits near zero while the loop has any headroom at
+        all, because a queue that drains faster than it fills has nothing
+        waiting, then goes vertical the moment arrival rate crosses service
+        rate. That shape gives a proportional controller a ratio of 1.2 one
+        moment and 60 the next, which is not a gradient it can steer on. The
+        panel below shows what that does to a fleet.
+      </p>
+
+      <h2>Watch it</h2>
+      <p>
+        Two fleets, one traffic stream, different signals. The controller is
+        the real thing: the HPA algorithm with its documented defaults. The
+        service underneath it is a model, fitted to the table at the top of
+        this page, running about sixteen times faster than real so the
+        five-minute scale-down window is watchable.
+      </p>
+
+      <div class="loop-viz hpa-viz" id="hpa-viz" aria-label="Autoscaler comparison"></div>
+
+      <p>
+        The first preset is the case this essay opened with. Switch the left
+        fleet to <em>lag</em> and wait: it pins to the replica ceiling, sits
+        there while the stabilization window runs out, collapses back to the
+        floor, immediately drowns, and climbs again. The ELU fleet finds its
+        number and stays there. The third preset moves the work to the thread
+        pool, where CPU reads high enough to scale out and nothing is
+        saturated at all.
+      </p>
+
+      <h2>The target</h2>
+      <p>
+        Export the gauge, get it into Kubernetes as a custom metric with
+        prometheus-adapter or KEDA, and point the HPA at it. Pod metric
+        targets are Quantities rather than plain floats, so a target of 0.7
+        canonicalizes to <code>700m</code>, which is what you will get back
+        from <code>kubectl</code> whichever way you write it:
+      </p>
+      <pre class="code"><code class="language-yaml">metrics:
+  - type: Pods
+    pods:
+      metric:
+        name: nodejs_event_loop_utilization
+      target:
+        type: AverageValue
+        averageValue: 700m   # 0.7 utilization</code></pre>
+      <p>
+        Worth knowing: CPU is not a Kubernetes default in any deep sense. It
+        is simply the only metric the original autoscaling API supported, and
+        it is what every template you copy still ships with.
+      </p>
+      <p>
+        The table argues for a target near 0.7. Through 240 rps and 81%
+        utilization, p99 stayed inside 100ms on every run; by 98% it is
+        measured in seconds. The
+        decision has to be made before that knee rather than on it, because
+        new pods are not instant: image pull, process start, JIT warmup, and
+        connection pools filling all happen after the HPA acts. Resist
+        deriving the number from queueing theory, though. The classic formula
+        wants latency to blow up as utilization climbs, and it does, but most
+        of the latency here is a fixed 40ms downstream call that no amount of
+        scaling touches. The measured knee is the honest evidence, and the
+        shape transfers where the constants do not.
+      </p>
+
+      <h2>The tradeoff</h2>
+      <p>
+        ELU is a better primary signal, not a sufficient one. It is blind to
+        memory pressure, to a saturated thread pool, and to a downstream
+        dependency that is the real constraint, where scaling out only adds
+        load to something already struggling. An HPA can carry several
+        metrics and takes the highest recommendation among them, so ELU plus
+        memory is a reasonable floor. It also cannot tell useful work from a
+        runaway loop; both read 1.0.
+      </p>
+      <p>
+        There is a case for leaving CPU alone, too. If your service is
+        genuinely CPU-bound in JavaScript, the two numbers converge and a
+        metrics adapter buys nothing but a new thing to break. The gap
+        between them is the whole justification for the extra machinery, so
+        measure it first: if ELU and CPU-against-request track within a few
+        points across your load range, keep the simple thing.
+      </p>
+
+      <h2>The principle</h2>
+      <p>
+        Autoscaling works when the metric you scale on is the resource that
+        actually runs out. For a single-threaded runtime that resource is the
+        event loop, and how full it is turns out to be a different number
+        from how much CPU the pod is using. The default template scales on the
+        one you can see rather than the one that is scarce.
+      </p>
+
+      <div class="drill-actions note-foot-nav">
+        <a class="btn" href="/notes/">&larr; All notes</a>
+        <a class="btn" href="/">Home</a>
+      </div>
+    </article>
+
+    <footer class="patterns-foot">
+      <span>© <span data-year-full>2026</span> Kyle Cho</span>
+      <span>37.7749&deg; N / 122.4194&deg; W</span>
+    </footer>
+  </main>
+
+  <script src="/js/main.js"></script>
+  <script src="/js/vendor/prism.min.js"></script>
+  <script src="/js/hpa-viz.js" defer></script>
+</body>
+</html>

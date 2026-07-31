@@ -144,6 +144,60 @@
   margin-top: clamp(2.5rem, 6vh, 3.5rem);
 }
 
+/* ------------------------------------------------------- measurement tables */
+/* Numeric rows must not wrap, so the wrapper scrolls internally rather than
+   letting a wide table push the page body sideways on narrow screens. */
+.note-table {
+  margin-top: 1.35rem;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 93%, var(--mesh-dot));
+}
+
+.note-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.note-table th,
+.note-table td {
+  padding: 0.5rem 0.9rem;
+  text-align: right;
+}
+
+/* First column is a label, not a number */
+.note-table th:first-child,
+.note-table td:first-child {
+  text-align: left;
+  color: var(--text-soft);
+}
+
+.note-table thead th {
+  border-bottom: 1px solid var(--line);
+  color: var(--text-soft);
+  font-weight: 500;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.note-table tbody td {
+  color: var(--text-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.note-table tbody tr + tr td {
+  border-top: 1px solid color-mix(in srgb, var(--line) 45%, transparent);
+}
+
+/* The column the essay is actually about */
+.note-table td.is-key {
+  color: var(--accent);
+}
+
 /* ------------------------------------------------- event-loop visualizer */
 
 .loop-viz {
@@ -377,6 +431,329 @@
 .cviz-sliders span {
   min-width: 4ch;
   color: var(--text-soft);
+}
+
+/* ---------------------------------------------------- autoscaler playground */
+
+/* Side-by-side comparison demos outgrow the 640px prose measure: each panel
+   lands near 290px, and everything inside has to shrink to fit. Once the
+   screen has room, these figures step outside the column. Prose stays put,
+   and single-stage demos (.cursor-viz, the event-loop stepper) stay inline
+   because they read fine at column width. */
+@media (min-width: 1080px) {
+  .hpa-viz,
+  .drag-viz,
+  .crdt-viz {
+    --viz-wide: min(960px, calc(100vw - 4rem));
+    width: var(--viz-wide);
+    margin-inline: calc((100% - var(--viz-wide)) / 2);
+  }
+}
+
+.hviz-premise {
+  display: flex;
+  margin-top: 0.9rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: baseline;
+  color: var(--text-mute);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.hviz-premise strong {
+  color: var(--accent);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.hviz-grid {
+  display: grid;
+  margin-top: 0.75rem;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.hviz-fleet {
+  padding: 1.1rem 1.2rem 1.2rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+/* One row per line, so both fleets are the same height however long the
+   signal name is and the two big readouts stay on the same baseline */
+.hviz-fleet figcaption {
+  display: grid;
+  gap: 0.2rem;
+  color: var(--text-mute);
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hviz-signal {
+  color: var(--text);
+  font-size: 0.78rem;
+}
+
+.hviz-metric {
+  display: flex;
+  margin-top: 0.7rem;
+  gap: 0.6rem;
+  align-items: baseline;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 2.4rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.hviz-metric.is-over {
+  color: var(--accent);
+}
+
+/* The controller's intent, as a pill so it reads as a state not a number */
+.hviz-verdict {
+  padding: 0.24rem 0.6rem;
+  border: 1px solid color-mix(in srgb, currentColor 45%, transparent);
+  border-radius: 999px;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.hviz-metric-sub {
+  margin-top: 0.4rem;
+  color: var(--text-mute);
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.04em;
+}
+
+.hviz-gauges {
+  margin-top: 0.9rem;
+}
+
+.hviz-gauge {
+  display: flex;
+  margin-top: 0.4rem;
+  gap: 0.6rem;
+  align-items: center;
+  color: var(--text-mute);
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+}
+
+.hviz-gauge > span {
+  width: 3ch;
+}
+
+.hviz-gauge > b {
+  width: 4.5ch;
+  color: var(--text-soft);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Wraps between whole clauses, never mid-phrase, on a narrow card */
+.hviz-legend {
+  display: flex;
+  margin-top: 0.5rem;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  align-items: center;
+  color: var(--text-mute);
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.04em;
+}
+
+.hviz-legend span {
+  white-space: nowrap;
+}
+
+.hviz-bar {
+  position: relative;
+  overflow: hidden;
+  height: 9px;
+  flex: 1;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--text-mute) 22%, transparent);
+}
+
+/* Target marker: makes over/under target readable at a glance instead of
+   asking the reader to compare two numbers in their head */
+.hviz-tick {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  left: 70%;
+  width: 2px;
+  background: var(--text-soft);
+  opacity: 0.85;
+}
+
+.hviz-tick-key {
+  display: inline-block;
+  width: 2px;
+  height: 0.75em;
+  background: var(--text-soft);
+  vertical-align: -0.1em;
+}
+
+.hviz-bar > i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+  transition: width 120ms linear;
+}
+
+/* Past 100% of the request the bar is pinned, so change colour instead */
+.hviz-bar.is-past > i {
+  background: color-mix(in srgb, var(--accent) 55%, #ff8a5c);
+}
+
+.hviz-podrow {
+  display: flex;
+  margin-top: 1rem;
+  gap: 0.6rem;
+  align-items: center;
+  color: var(--text-mute);
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* No fixed width: both cards carry the same label, so they align anyway,
+   and a too-narrow track collided with the count */
+.hviz-podrow > span {
+  white-space: nowrap;
+}
+
+.hviz-podrow > b {
+  min-width: 2ch;
+  color: var(--text-soft);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.hviz-pods {
+  display: flex;
+  min-height: 26px;
+  gap: 4px;
+  flex: 1;
+  flex-wrap: wrap;
+  align-content: center;
+}
+
+.hviz-pod {
+  width: 11px;
+  height: 24px;
+  border-radius: 3px;
+  background: var(--accent);
+}
+
+/* A pod that exists but isn't taking traffic yet */
+.hviz-pod.is-pending {
+  background: none;
+  border: 1px dashed color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.hviz-foot {
+  margin-top: 0.85rem;
+  color: var(--text-soft);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.hviz-foot.is-bad {
+  color: #ff8a5c;
+}
+
+.hviz-sparkwrap {
+  margin-top: 0.9rem;
+}
+
+.hviz-sparkwrap > span {
+  color: var(--text-mute);
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hviz-spark {
+  display: block;
+  width: 100%;
+  height: 34px;
+  margin-top: 0.25rem;
+  border-bottom: 1px solid var(--line);
+  color: color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+/* ---- controls ---- */
+
+.hviz-controls {
+  display: flex;
+  margin-top: 1.1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  gap: 1.1rem 1.5rem;
+  flex-wrap: wrap;
+}
+
+.hviz-ctl-wide {
+  flex: 1;
+  min-width: 260px;
+}
+
+.hviz-ctl-label {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: var(--text-mute);
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.hviz-ctl .viz-modes {
+  margin-top: 0;
+}
+
+.hviz-ctl .cviz-sliders {
+  margin-top: 0;
+  gap: 0.9rem;
+  align-items: center;
+}
+
+.hviz-playback {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+@media (max-width: 620px) {
+  .hviz-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hviz-bar > i {
+    transition: none;
+  }
 }
 
 /* --------------------------------------------------------- CRDT playground */
