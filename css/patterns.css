@@ -423,7 +423,9 @@ pre.code code {
 
 .token.tag .token.punctuation { color: var(--accent); }
 
-.token.attr-name { color: var(--code-num); }
+/* .atrule carries YAML's mapping keys, which are the same idea as attr-name */
+.token.attr-name,
+.token.atrule { color: var(--code-num); }
 
 .token.punctuation,
 .token.operator { color: var(--text-soft); }
