@@ -40,6 +40,15 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/style.css">
 
+  <!-- scene.js only discovers these via nested `import`s once it's already
+       fetched and parsed, which serializes three.core -> three.module ->
+       scene.js into one waterfall. Preloading lets the browser fetch both
+       chunks alongside scene.js instead, so the terrain's camera-dolly intro
+       starts close enough to the hero text reveal to read as one arrival
+       instead of a second, delayed animation. -->
+  <link rel="modulepreload" href="js/vendor/three.core.min.js">
+  <link rel="modulepreload" href="js/vendor/three.module.min.js">
+
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
