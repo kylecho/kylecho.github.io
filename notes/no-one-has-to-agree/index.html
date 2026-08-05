@@ -132,12 +132,14 @@
 
       <h2>CRDTs</h2>
       <p>
-        CRDTs skip the transform function by skipping positions-as-indices
-        entirely. Instead of &ldquo;insert at index 5,&rdquo; every
-        character gets a permanent position value when it&rsquo;s typed,
-        chosen to sit strictly between its left and right neighbors. Insert
-        a new character between two existing ones, and there&rsquo;s always
-        room to place it, without renumbering anything else.
+        CRDTs — conflict-free replicated data types — skip the transform
+        function by skipping positions-as-indices entirely. The demo below
+        uses the most direct version of that idea: instead of &ldquo;insert
+        at index 5,&rdquo; every character gets a permanent position value
+        when it&rsquo;s typed, chosen to sit strictly between its left and
+        right neighbors. Insert a new character between two existing ones,
+        and there&rsquo;s always room to place it, without renumbering
+        anything else.
       </p>
       <p>
         That&rsquo;s what makes the operations commutative: compare two
@@ -146,6 +148,19 @@
         no server to sequence anything — any two replicas that have seen the
         same set of operations converge on the same document, in any order,
         even fully out of order.
+      </p>
+      <p>
+        Splitting real numbers between neighbors is one way to get
+        commutative ordering — the one that&rsquo;s easiest to put on a
+        page. Yjs and Automerge, the CRDTs people actually ship, solve the
+        same problem without positions: each character stores which
+        character it was inserted after instead of where it sits, forming a
+        chain back to the start of the document, and two concurrent inserts
+        after the same character are ordered by comparing replica IDs
+        rather than splitting a number between them. No real-number
+        arithmetic, no shrinking gaps to subdivide — but the same
+        guarantee: compare two operations any way you like, and every
+        replica lands on the same order regardless of arrival order.
       </p>
 
       <h2>Feel it</h2>
